@@ -1,0 +1,192 @@
+%------------------------
+% Taal & codering
+%------------------------
+\usepackage[english]{babel}        % Nederlandse hyphenatie en typografie
+\usepackage[T1]{fontenc}         % Correcte font-encoding (accenten, afbreking)
+\usepackage[utf8]{inputenc}      % Bronbestand in UTF-8 (met moderne LaTeX niet strikt nodig)
+\usepackage{csquotes}            % Correcte aanhalingstekens (werkt goed met biblatex)
+
+%------------------------
+% Lettertype
+%   XCharter + newtxmath geven een nette, consistente set
+%------------------------
+\usepackage{XCharter}            % Tekstfont
+\usepackage[charter]{newtxmath} % Wiskunde bij Charter (variabele symbolen)
+\usepackage{microtype}           % Mooiere microtypografie
+
+%------------------------
+% Wiskunde & symbolen
+%------------------------
+\usepackage{amsmath,mathtools}
+\usepackage{siunitx}
+\sisetup{
+    per-mode = symbol,
+    exponent-product = \cdot,
+    output-decimal-marker = {.},
+    exponent-product = \cdot
+}
+\DeclareSIUnit\phase{ph}  % Extra eenheid voorbeeld
+\DeclareSIUnit{\ohmpsquare}{\text{\ensuremath{\Omega/\square}}}
+\usepackage{nicematrix}
+
+%------------------------
+% Afbeeldingen, figuren, grafieken
+%------------------------
+\usepackage{graphicx}
+\usepackage{wrapfig}
+\usepackage{float}
+\usepackage{subcaption}   % Vervangt subfig
+\usepackage{pgfplots}
+\usepackage{matlab-prettifier}
+\usepgfplotslibrary{polar}
+\pgfplotsset{compat=1.18}
+
+%------------------------
+% TikZ & elektrische schema's
+%------------------------
+\usepackage[european,american voltages]{circuitikz}
+\usetikzlibrary{
+  arrows.meta,
+  positioning,
+  shapes.geometric,
+  patterns,
+  backgrounds,
+  scopes
+}
+
+%------------------------
+% Tabellen en lijsten
+%------------------------
+\usepackage{booktabs,longtable,multirow,multicol,array}
+\usepackage{tabularx}
+\newcolumntype{Y}{>{\centering\arraybackslash}X}
+\newcolumntype{?}{!{\vrule width 2pt}} % Dikke verticale lijn indien echt nodig
+\newcommand{\thickhline}{\noalign{\hrule height 2pt}}
+
+%------------------------
+% Codefragmenten
+%------------------------
+\usepackage{listings}
+\lstset{
+  basicstyle=\ttfamily\small,
+  frame=single,
+  columns=fullflexible,
+  showstringspaces=false,
+  tabsize=2,
+  breaklines=true,
+  language=C
+}
+
+\definecolor{codegreen}{rgb}{0,0.5,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.97,0.97,0.97}
+
+\lstdefinestyle{mypython}{
+    language=Python,
+    backgroundcolor=\color{backcolour},
+    basicstyle=\ttfamily\scriptsize,
+    keywordstyle=\color{blue},
+    commentstyle=\color{codegreen},
+    stringstyle=\color{codepurple},
+    numberstyle=\tiny\color{codegray},
+    numbers=left,
+    numbersep=6pt,
+    breaklines=true,
+    breakatwhitespace=false,
+    showstringspaces=false,
+    showspaces=false,
+    showtabs=false,
+    tabsize=4,
+    frame=single,
+    captionpos=b,
+    keepspaces=true
+}
+
+%------------------------
+% Verwijzingen & hyperlinks (volgorde: eerst hyperref, dan cleveref)
+%------------------------
+\usepackage[hidelinks]{hyperref}
+\usepackage[noabbrev,nameinlink]{cleveref}
+
+\usepackage{attachfile2}
+
+%------------------------
+% Opmaak & randvoorwaarden
+%------------------------
+\usepackage{parskip}      % Geen inspringing, wel witregel tussen alinea's
+\usepackage{enumitem}     % Fijnere controle lijsten
+\usepackage{xcolor}
+\usepackage{fancyhdr}
+\usepackage{geometry}
+\geometry{
+  a4paper,
+  left=30mm,right=30mm,top=33mm,bottom=20mm
+}
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{\leftmark}
+\rhead{\thepage}
+
+%------------------------
+% Bibliografie (IEEE-stijl, biber-backend)
+%------------------------
+\usepackage[
+  backend=biber,
+  bibstyle=ieee,
+  citestyle=numeric-comp,
+  doi=false,isbn=false,url=true
+]{biblatex}
+\addbibresource{references.bib}
+
+%------------------------
+% Caption-breedte en centrering
+%------------------------
+\usepackage[justification=centering]{caption}
+\captionsetup{width=0.95\linewidth}
+
+%------------------------
+% Handige eigen omgevingen/lijsten
+%------------------------
+\newlist{requirements}{enumerate}{10}
+\setlist[requirements]{label*=REQ-\arabic*,leftmargin=*,itemsep=0.25em}
+
+\newlist{Nreq}{enumerate}{10}
+\setlist[Nreq]{label*=NREQ-\arabic*,leftmargin=*,itemsep=0.25em}
+
+\newlist{research}{enumerate}{10}
+\setlist[research]{label*=RQ-\arabic*,leftmargin=*,itemsep=0.25em}
+
+%------------------------
+% Bestandslocaties voor afbeeldingen
+%------------------------
+\graphicspath{{./figures/}}
+
+% Optioneel: euroteken (meestal overbodig met moderne fonts)
+% \usepackage{eurosym}
+
+% Optioneel: PDF inladen
+% \usepackage{pdfpages}
+
+% Optioneel: externe referenties
+% \usepackage{xr}
+
+\mathchardef\Re="023C
+\mathchardef\Im="023D
+
+\DeclareSIUnit{\dBi}{dBi}
+\DeclareMathOperator{\sinc}{sinc}
+
+\usepackage{titlesec}
+\usepackage{tocloft}
+\setlength{\cftsubsecnumwidth}{2.25cm}
+
+\renewcommand{\thesubsection}{Question \arabic{subsection}}
+
+\titleformat{\subsection}
+{\normalfont\large\bfseries}
+{\thesubsection}
+{1cm}
+{}
+
+\renewcommand{\cftdot}{}
