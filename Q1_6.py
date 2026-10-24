@@ -1,145 +1,221 @@
-import control as co
 import numpy as np
-import sympy as sp
 import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation, PillowWriter
+from pathlib import Path
+import sys
 
-# System parameters
-r_m     = 11e-3 # motor radius
-K_m     = 0.07  # motor constant
-L_m     = 10e-3 # motor inductance
-m       = 60e-3 # printer head mass
-J_m     = 8e-6  # motor inertia
-R_m     = 90    # motor resistance
-mu_lx   = 0.002 # linear bearing friction, x-direction
-mu_ly   = 0.001 # linear bearing friction, y-direction
-mu_r    = 0.003 # Rolling bearing friction
-dx      = 0.29  # Print bed length
-dy      = 0.29  # Print bed height
 
-#derived system formulas
-J_eff   = J_m+m*r_m**2/2 # effective inertia
-d_s     = r_m**2/4*(mu_lx + mu_ly + 12*mu_r) #self friction
-d_c     = r_m**2/4*(mu_lx - mu_ly + 4*mu_r) #coupled friction
-x_c     = dx/2 #center of printbed x-direction
-y_c     = dy/2 #center of printbed y-direction
-Time    = 10 #Omlooptijd
-Omega   = 2*np.pi/Time
+def x_position(t):
+    """Nozzle position at physical time t [s], independent of integration dt."""
+    return x_c + a * np.cos(Omega * t)
 
-# State matrix
-A_x = np.array([[0, 1 ,0],
-              [0, -(d_s+d_c)/J_eff, r_m*K_m/(2*J_eff)],
-              [0, -2*K_m/(r_m*L_m), -R_m/L_m]])
 
-# State matrix
-A_y = np.array([[0, 1 ,0],
-              [0, -(d_s-d_c)/J_eff, r_m*K_m/(2*J_eff)],
-              [0, -2*K_m/(r_m*L_m), -R_m/L_m]])
+def y_position(t):
+    return y_c - b * np.sin(Omega * t)
 
-# Input matrix
-B = np.array([[0],
-              [0],
-              [1/L_m]])
-
-# Output matrix
-C = np.array([1,0,0])
-
-# Direct feedthrough matrix
-D = np.array([0])
-
-# Create the state-space model
-sys_x = co.ss(A_x, B, C, D)
-
-# Create the state-space model
-sys_y = co.ss(A_y, B, C, D)
-
-t = sp.Symbol("t", real=True)
-
-data = np.genfromtxt(
-    "Efteling.csv",
-    delimiter=",",
-    names=True,
-    max_rows=200
-)
-
-k = data["turns_n"]
-c = data["re"] + 1j * data["im"]
-
-Omega = 2 * np.pi / Time
-time = np.linspace(0, Time, 2000)
-
-# Iedere rij is één Four term; tel de rijen op
-z = np.sum(
-    c[:, None] * np.exp(1j * k[:, None] * Omega * time[None, :]),
-    axis=0
-)
-
-x = z.real
-y = z.imag
-
-x_raw = sp.Add(*[
-    float(ck.real) * sp.cos(int(ki) * Omega * t)
-    - float(ck.imag) * sp.sin(int(ki) * Omega * t)
-    for ki, ck in zip(k, c)
-])
-
-y_raw = sp.Add(*[
-    float(ck.real) * sp.sin(int(ki) * Omega * t)
-    + float(ck.imag) * sp.cos(int(ki) * Omega * t)
-    for ki, ck in zip(k, c)
-])
-
-scale = 0.20 / max(np.ptp(x), np.ptp(y))
-
-x_mid = (x.max() + x.min()) / 2
-y_mid = (y.max() + y.min()) / 2
-
-x_ref = 0.145 + scale * (x_raw - x_mid)
-y_ref = 0.145 - scale * (y_raw - y_mid)
+# Material properties and heat-transfer coefficients in SI units
+C_to_Kelvin = 273.15
+lam = 0.177
+C_p = 2080
+rho = 1050
+alpha_air = 25 #25
+alpha_bed = 50  # Assumed effective contact coefficient [W/(m^2 K)]
+height = 2e-4
+Te = 300
+Tb = 105 + C_to_Kelvin
+Tn = 240 + C_to_Kelvin
 
 a = 0.1
 b = 0.07
+dx = dy = 0.29
+x_c = dx / 2
+y_c = dy / 2
+printing_time = 20.0
+simulation_time = 40.0  # Includes cooling after printing stops
+Omega = 2 * np.pi / printing_time
+delta_s_target = 0.5e-3
+uniformity_tolerance = 1.0  # K, assessed after closing the ring
 
-#x_ref       = x_c + a * sp.cos(Omega*t)
-#y_ref       = y_c + b * sp.sin(Omega*t)
-dot_x       =  sp.diff(x_ref)
-dot_y       =  sp.diff(y_ref)
-dotdot_x    =  sp.diff(dot_x)
-dotdot_y    =  sp.diff(dot_y)
+a_th = lam / (rho * C_p)
+B_air = 3 * alpha_air / (rho * C_p * height)
+B_bed = alpha_bed / (rho * C_p * height)
 
-i_x = 2/(r_m*K_m)*(J_eff*dotdot_x+(d_s+d_c)*dot_x)
-i_y = 2/(r_m*K_m)*(J_eff*dotdot_y+(d_s-d_c)*dot_y)
+# First calculate geometry, without using the thermal time step.
+t_geometry = np.linspace(0, printing_time, 10001)
+x_geometry = x_position(t_geometry)
+y_geometry = y_position(t_geometry)
+s_geometry = np.r_[0.0, np.cumsum(np.hypot(
+    np.diff(x_geometry), np.diff(y_geometry)
+))]
+length = s_geometry[-1]
+n_segments = int(np.ceil(length / delta_s_target))
+delta_s = length / n_segments
+s_edges = np.linspace(0, length, n_segments + 1)
+s_centres = (s_edges[:-1] + s_edges[1:]) / 2
+x_segments = np.interp(s_centres, s_geometry, x_geometry)
+y_segments = np.interp(s_centres, s_geometry, y_geometry)
 
-dot_i_x = sp.diff(i_x)
-dot_i_y = sp.diff(i_y)
+# Cellwise deposition: activate a complete cell at its downstream edge.
+# Refine delta_s to reduce this approximation to continuous deposition.
+deposition_times = np.interp(s_edges[1:], s_geometry, t_geometry)
 
-u_x = L_m*dot_i_x+R_m*i_x+(2*K_m/r_m)*dot_x
-u_y = L_m*dot_i_y+R_m*i_y+(2*K_m/r_m)*dot_y
+# Forward Euler stability bound with a safety factor.
+dt_limit = 1 / (2 * a_th / delta_s**2 + B_air + B_bed)
+n_steps = int(np.ceil(simulation_time / (dt_limit / 10)))
+# Include every deposition event exactly, splitting time steps as necessary.
+time = np.unique(np.r_[
+    np.linspace(0, simulation_time, n_steps + 1), deposition_times
+])
+n_steps = len(time) - 1
 
-x_x0 = [x_ref.subs(t,0), dot_x.subs(t,0), i_x.subs(t,0)]
-y_y0 = [y_ref.subs(t,0), dot_y.subs(t,0), i_y.subs(t,0)]
+# Columns are physical cells; rows are time instants. NaN = not yet printed.
+T_history = np.full((len(time), n_segments), np.nan)
+Temp = np.empty(0)
+next_segment = 0
 
-timepts = np.linspace(0, Time, 1000)
-ux_function = sp.lambdify(t, u_x, modules="numpy")
-ux_values = ux_function(timepts)
-x0_values = np.array(x_x0, dtype=float)
-tout, x_position = co.forced_response(
-    sys_x, timepts, ux_values, x0_values
+for n in range(n_steps):
+    dt = time[n + 1] - time[n]
+    ring_closed = time[n] >= printing_time
+
+    if len(Temp):
+        conduction = np.zeros_like(Temp)
+        if ring_closed:
+            # Periodic neighbours after the entire path has been deposited.
+            conduction = a_th * (
+                np.roll(Temp, 1) - 2 * Temp + np.roll(Temp, -1)
+            ) / delta_s**2
+        else:
+            # Pairwise exchange; no heat flux through the two free ends.
+            exchange = a_th * np.diff(Temp) / delta_s**2
+            conduction[:-1] += exchange
+            conduction[1:] -= exchange
+
+        dot_T = (conduction - B_air * (Temp - Te)
+                 + B_bed * (Tb - Temp))
+        Temp = Temp + dt * dot_T
+
+    # New material starts at Tn once, after existing material has advanced.
+    while (next_segment < n_segments
+           and deposition_times[next_segment] <= time[n + 1]):
+        Temp = np.append(Temp, Tn)
+        next_segment += 1
+
+    T_history[n + 1, :len(Temp)] = Temp
+
+T_equilibrium = (3 * alpha_air * Te + alpha_bed * Tb) / (
+    3 * alpha_air + alpha_bed
 )
+completed = np.flatnonzero(time >= printing_time)
+spread = np.ptp(T_history[completed], axis=1)
+uniform = completed[spread < uniformity_tolerance]
+print(f'Path length: {length:.4f} m')
+print(f'Segments: {n_segments}; delta_s: {delta_s * 1000:.4f} mm')
+print(f'Maximum integration step: {np.diff(time).max():.5f} s')
+print(f'Expected equilibrium: {T_equilibrium - C_to_Kelvin:.2f} deg C')
+if len(uniform):
+    print(f'First near-uniform state after closure: t = {time[uniform[0]]:.2f} s')
+else:
+    print('Not yet near-uniform; increase simulation_time.')
 
-uy_function = sp.lambdify(t, u_y, modules="numpy")
-uy_values = uy_function(timepts)
-y0_values = np.array(y_y0, dtype=float)
-tout, y_position = co.forced_response(
-    sys_y, timepts, uy_values, y0_values
+# Animate stored results; display frames are independent of solver steps.
+fps = 15
+playback_speed = 2.0  # Simulated seconds per playback second
+frame_times = np.unique(np.r_[
+    np.arange(0, simulation_time, playback_speed / fps),
+    printing_time, simulation_time,
+])
+fig, ax = plt.subplots(figsize=(7, 6), constrained_layout=True)
+ax.plot(x_geometry, y_geometry, color='0.85', linewidth=1, zorder=0)
+points = ax.scatter(
+    [], [], c=np.empty(0), cmap='inferno',
+    vmin=Te - C_to_Kelvin, vmax=Tn - C_to_Kelvin, s=14,
 )
+nozzle, = ax.plot([], [], 'o', color='deepskyblue',
+                  markeredgecolor='black', markersize=7, label='Nozzle')
+status = ax.text(0.02, 0.98, '', transform=ax.transAxes, va='top',
+                 bbox=dict(facecolor='white', alpha=0.85, edgecolor='none'))
+ax.set(xlabel='x position [m]', ylabel='y position [m]',
+       xlim=(0, dx), ylim=(0, dy))
+ax.set_aspect('equal')
+ax.grid(True)
+ax.legend(loc='lower right')
+fig.colorbar(points, ax=ax, label='Temperature [deg C]')
 
-plt.figure()
-plt.plot(x_position, y_position, color = 'r')
-plt.xlabel('x position')
-plt.ylabel('y position')
-plt.title('Printed shape')
-plt.xlim(0, dx)
-plt.ylim(0, dy)
-plt.grid(True)
-plt.axis("equal")
+
+def update_animation(display_time):
+    # Show the most recent completed integration state (never a future state).
+    frame = np.searchsorted(time, display_time, side='right') - 1
+    temperatures = T_history[frame]
+    active = np.isfinite(temperatures)
+    points.set_offsets(np.column_stack((x_segments[active], y_segments[active])))
+    points.set_array(temperatures[active] - C_to_Kelvin)
+    printing = display_time < printing_time
+    nozzle.set_visible(printing)
+    if printing:
+        nozzle.set_data([x_position(display_time)], [y_position(display_time)])
+    phase = 'Printing' if printing else 'Cooling: deposition finished'
+    ax.set_title(f'Filament temperature | t = {display_time:.2f} s')
+    status.set_text(f'{phase}\nDeposited cells: {active.sum()} / {n_segments}')
+    return points, nozzle, status
+
+
+# Keep a reference so the animation is not garbage-collected before display.
+animation = FuncAnimation(fig, update_animation, frames=frame_times,
+                          interval=1000 / fps, blit=False, repeat=True)
+
+# Optional portable export: python Q1_6.py --save-gif
+if '--save-gif' in sys.argv:
+    output = Path(__file__).resolve().parent / 'output' / 'Q1_6_temperature.gif'
+    output.parent.mkdir(parents=True, exist_ok=True)
+    animation.save(output, writer=PillowWriter(fps=fps), dpi=90)
+    print(f'Animation saved to: {output}')
+
+# Optional PNG sequence for LaTeX: python Q1_6.py --save-frames
+if '--save-frames' in sys.argv:
+    frames_directory = Path(__file__).resolve().parent / 'frames'
+    frames_directory.mkdir(parents=True, exist_ok=True)
+    export_frame_count = 30
+    export_times = np.linspace(0, simulation_time, export_frame_count)
+    export_fps = export_frame_count / (simulation_time / playback_speed)
+    # Remove only obsolete numbered frames produced by this exporter.
+    for old_frame in frames_directory.glob('frame-*.png'):
+        if old_frame.stem.removeprefix('frame-').isdigit():
+            old_frame.unlink()
+    for frame_number, display_time in enumerate(export_times):
+        update_animation(display_time)
+        fig.savefig(frames_directory / f'frame-{frame_number:03d}.png', dpi=90)
+    # Store matching frame bounds rather than assuming the duration is fixed.
+    latex_command = (
+        r'\animategraphics[controls,loop,width=0.8\linewidth]'
+        f'{{{export_fps:g}}}{{frames/frame-}}{{000}}{{{export_frame_count - 1:03d}}}'
+    )
+    (frames_directory / 'animation.tex').write_text(
+        '% Requires \\usepackage{animate} in the preamble.\n'
+        + latex_command + '\n', encoding='utf-8'
+    )
+    print(f'Exported {export_frame_count} PNG frames to: {frames_directory}')
+    print(latex_command)
+    update_animation(frame_times[0])
+
+# Separate diagnostic plot; the animation and its GIF export stay unchanged.
+fig_ends, ax_ends = plt.subplots(figsize=(8, 4.5), constrained_layout=True)
+ax_ends.plot(time, T_history[:, 0] - C_to_Kelvin,
+             label='First segment', color='tab:blue')
+ax_ends.plot(time, T_history[:, -1] - C_to_Kelvin,
+             label='Last segment', color='tab:orange')
+ax_ends.axvline(printing_time, color='black', linestyle='--',
+                label='Ring closure')
+# Make the last segment's initial value visible at its deposition instant.
+ax_ends.scatter([printing_time], [Tn - C_to_Kelvin],
+                color='tab:orange', s=25, zorder=3)
+ax_ends.set(xlabel='Time [s]', ylabel='Temperature [deg C]',
+            title='Temperature of the first and last filament segments',
+            xlim=(0, simulation_time))
+ax_ends.grid(True)
+ax_ends.legend()
+ends_output = Path(__file__).resolve().parent / 'output' / 'Q1_6_end_segments.png'
+ends_output.parent.mkdir(parents=True, exist_ok=True)
+fig_ends.savefig(ends_output, dpi=180)
+print(f'Segment temperature plot saved to: {ends_output}')
+
 plt.show()

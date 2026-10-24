@@ -16,5 +16,128 @@
   {}
 \endgroup
 
+
+\refsection{0}
+  \datalist[entry]{none/global//global/global/global}
+    \entry{Fourier_pen}{online}{}{}
+      \name{author}{1}{}{%
+        {{hash=3d8452b4b95cb5e2b278d0dbbe6a2dc9}{%
+           family={{Jeremy Lee}},
+           familyi={J\bibinitperiod}}}%
+      }
+      \strng{namehash}{3d8452b4b95cb5e2b278d0dbbe6a2dc9}
+      \strng{fullhash}{3d8452b4b95cb5e2b278d0dbbe6a2dc9}
+      \strng{fullhashraw}{3d8452b4b95cb5e2b278d0dbbe6a2dc9}
+      \strng{bibnamehash}{3d8452b4b95cb5e2b278d0dbbe6a2dc9}
+      \strng{authorbibnamehash}{3d8452b4b95cb5e2b278d0dbbe6a2dc9}
+      \strng{authornamehash}{3d8452b4b95cb5e2b278d0dbbe6a2dc9}
+      \strng{authorfullhash}{3d8452b4b95cb5e2b278d0dbbe6a2dc9}
+      \strng{authorfullhashraw}{3d8452b4b95cb5e2b278d0dbbe6a2dc9}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{title}{{Fourier Pen}}
+      \field{urlday}{24}
+      \field{urlmonth}{10}
+      \field{urlyear}{2026}
+      \field{year}{2026}
+      \field{urldateera}{ce}
+      \verb{urlraw}
+      \verb https://fourier-pen.vercel.app/
+      \endverb
+      \verb{url}
+      \verb https://fourier-pen.vercel.app/
+      \endverb
+    \endentry
+    \entry{Efteling_logo_coordinates}{misc}{}{}
+      \name{author}{1}{}{%
+        {{hash=24ac9e231c128b31ad92dc919a3bb5a6}{%
+           family={Boer},
+           familyi={B\bibinitperiod},
+           given={E.},
+           giveni={E\bibinitperiod},
+           prefix={den},
+           prefixi={d\bibinitperiod}}}%
+      }
+      \strng{namehash}{24ac9e231c128b31ad92dc919a3bb5a6}
+      \strng{fullhash}{24ac9e231c128b31ad92dc919a3bb5a6}
+      \strng{fullhashraw}{24ac9e231c128b31ad92dc919a3bb5a6}
+      \strng{bibnamehash}{24ac9e231c128b31ad92dc919a3bb5a6}
+      \strng{authorbibnamehash}{24ac9e231c128b31ad92dc919a3bb5a6}
+      \strng{authornamehash}{24ac9e231c128b31ad92dc919a3bb5a6}
+      \strng{authorfullhash}{24ac9e231c128b31ad92dc919a3bb5a6}
+      \strng{authorfullhashraw}{24ac9e231c128b31ad92dc919a3bb5a6}
+      \field{sortinit}{2}
+      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{howpublished}{Unpublished CSV file}
+      \field{title}{Complex Fourier series for the Efteling logo}
+      \field{year}{2026}
+    \endentry
+    \entry{santos2023insights}{article}{}{}
+      \name{author}{7}{}{%
+        {{hash=28d7a91280cbaec7c11e18d4473e38e1}{%
+           family={Santos},
+           familyi={S\bibinitperiod},
+           given={Tiago},
+           giveni={T\bibinitperiod}}}%
+        {{hash=8a516f15beffa116a88efe2e776708ef}{%
+           family={Belbut},
+           familyi={B\bibinitperiod},
+           given={Miguel},
+           giveni={M\bibinitperiod}}}%
+        {{hash=d84a1aa75aebabba2740bab769b23559}{%
+           family={Amaral},
+           familyi={A\bibinitperiod},
+           given={João},
+           giveni={J\bibinitperiod}}}%
+        {{hash=fea5fee53535a8f88b78bb4419bec3d9}{%
+           family={Amaral},
+           familyi={A\bibinitperiod},
+           given={Vitor},
+           giveni={V\bibinitperiod}}}%
+        {{hash=be998ce5094494ab4a5ecc69091c5820}{%
+           family={Ferreira},
+           familyi={F\bibinitperiod},
+           given={Nelson},
+           giveni={N\bibinitperiod}}}%
+        {{hash=4ae42d68d700e46cafb590f6703dd7af}{%
+           family={Alves},
+           familyi={A\bibinitperiod},
+           given={Nuno},
+           giveni={N\bibinitperiod}}}%
+        {{hash=ad23f1174c5501acb07d5c58747be4e0}{%
+           family={Pascoal-Faria},
+           familyi={P\bibinithyphendelim F\bibinitperiod},
+           given={Paula},
+           giveni={P\bibinitperiod}}}%
+      }
+      \list{publisher}{1}{%
+        {MDPI}%
+      }
+      \strng{namehash}{f227c0126b07237d0f6c0d4ad21dd7b4}
+      \strng{fullhash}{14334bc67472ac6f90625687419f6ce3}
+      \strng{fullhashraw}{14334bc67472ac6f90625687419f6ce3}
+      \strng{bibnamehash}{f227c0126b07237d0f6c0d4ad21dd7b4}
+      \strng{authorbibnamehash}{f227c0126b07237d0f6c0d4ad21dd7b4}
+      \strng{authornamehash}{f227c0126b07237d0f6c0d4ad21dd7b4}
+      \strng{authorfullhash}{14334bc67472ac6f90625687419f6ce3}
+      \strng{authorfullhashraw}{14334bc67472ac6f90625687419f6ce3}
+      \field{sortinit}{3}
+      \field{sortinithash}{ad6fe7482ffbd7b9f99c9e8b5dccd3d7}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Journal of Manufacturing and Materials Processing}
+      \field{number}{6}
+      \field{title}{Insights into temperature simulation and validation of fused deposition modeling processes}
+      \field{volume}{7}
+      \field{year}{2023}
+      \field{pages}{189}
+      \range{pages}{1}
+    \endentry
+  \enddatalist
+\endrefsection
 \endinput
 

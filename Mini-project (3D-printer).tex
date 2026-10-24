@@ -561,6 +561,8 @@ Resulting in the transformed state-space representation
     \end{minipage}
 \end{figure}
 
+\clearpage
+
 \subsection{Drawing shapes}
 The corresponding motor voltages need to be determined in order to draw an ellipse with the 3D-printer. The $x$, and $y-$coordinates can be stated as
 \begin{equation}
@@ -589,7 +591,7 @@ Using the decoupled state-space matrices (i.e., \Cref{eq:ss-x,eq:ss-y}), the mot
 \end{array}
 \end{equation}
 
-When $a=\SI{0.1}{\meter} $, $b=\SI{0.07}{\meter}$ and $T=10$ the model returns the following plot given in \Cref{fig:Ellipse}. 
+When $a=\SI{0.1}{\meter} $, $b=\SI{0.07}{\meter}$, $x_{\text{ref}}=\frac{dx}{2}=\SI{0.145}{\meter}$, $y_{\text{ref}}=\frac{dy}{2}=\SI{0.145}{\meter}$ and $T=10$ the model returns the following plot given in \Cref{fig:Ellipse}. 
 
 \begin{figure}[htbp]
     \centering
@@ -625,6 +627,7 @@ The complex Fourier series and its relation to the printer head position is give
 
 The website \cite{Fourier_pen} is used to obtain the coefficients $c_k$. When the coefficients from \cite{Efteling_logo_coordinates} are used, the 3D-printer draws \Cref{fig:Efteling}. 
 
+\clearpage
 \subsection{Model the Nozzle}
 The lumped model of the nozzle is shown in \Cref{fig:Nozzle_schematic}.
 \begin{figure}[H]
@@ -663,13 +666,13 @@ A suitable choice for the state vector is
 Transforming into the requested format (i.e, $\dot{\mathbf{x}}=f(\mathbf{x},\mathbf{u})$) yields 
 \begin{align}
     \dfrac{d}{dt}
-    \begin{bNiceMatrix}[cell-space-limits=5pt]
+    \begin{bNiceMatrix}[cell-space-limits=4pt]
         T_n\\
         i_L\\
         v_n
     \end{bNiceMatrix}
     =
-    \begin{bNiceMatrix}[cell-space-limits=5pt]
+    \begin{bNiceMatrix}[cell-space-limits=4pt]
         \dfrac{1}{C_{t,n}}\left(\dfrac{v_n^2}{R_n}-\dfrac{T_n-T_e}{R_{t,n}}\right)\\
         \dfrac{u_n-v_n}{L_n}\\
         \dfrac{i_L-\dfrac{v_n}{R_n}}{C_n}
@@ -677,7 +680,6 @@ Transforming into the requested format (i.e, $\dot{\mathbf{x}}=f(\mathbf{x},\mat
 \end{align}
 
 \subsection{Printing a circle of filament (PDE)}
-
 To aid in the derivation, \Cref{fig:filament-discretization} is created to define the conventions.
 
 \begin{figure}[H]
@@ -846,25 +848,40 @@ The printing speed is given by
 \begin{equation}
     v_{\text{print}} = \sqrt{\dot{x}^2+\dot{y}^2}.
 \end{equation}
+The functions used for $x$ and $y$ are given in \Cref{eq:ellipse}.
 
 The cross-sectional area between two pieces of filament is given by $A=h^2$. The boundary between the air and the filament are given by $p_{\text{air}}=3h$. The print bed and the filament are in contact $p_{\text{bed}}=h$.
 
 The Partial Differential Equation (PDE) for the heat transfer can be modelled as 
 \begin{align}
-    \underbrace{\rho c_p A \frac{\partial T(s,t)}{\partial t}}_{\text{Storage}} &= \underbrace{\lambda h^2 \frac{\partial^2 T(s,t)}{\partial s^2}}_{\text{Conduction}}-\underbrace{\alpha_{\text{air}}3h\left(T(s,t)-T_e\right)}_{\text{Convection}}+\underbrace{\alpha_{\text{bed}}h\left(T_b-T(s,t)\right)}_{\text{Heated bed}}.
+    \underbrace{\rho C_p A \frac{\partial T(s,t)}{\partial t}}_{\text{Heat storage}} &= \underbrace{\lambda A \frac{\partial^2 T(s,t)}{\partial s^2}}_{\text{Conduction}}-\underbrace{\alpha_{\text{air}}3h\left(T(s,t)-T_e\right)}_{\text{Convection}}+\underbrace{\alpha_{\text{bed}}h\left(T_b-T(s,t)\right)}_{\text{Heated bed}}.\label{eq:PDE}
 \end{align}
 
 The initial value condition can be found by defining $t_d(s)$ which indicates the time when the filament at position $s$ is printed. At that time and position, the temperature of the filament is equal to the nozzle temperature $T(s,t_d(s))=T_n$.
 
 The printing temperature of the nozzle is $T_n=\SI{240}{\degreeCelsius}$. A suitable choice for filament is ABS as this temperature falls in the generic print temperature \cite{santos2023insights}.
 
-\begin{figure}[htbp]
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.8\linewidth]{table_ABS_parameters.png}
     \caption{The ABS material properties as presented in \cite{santos2023insights}. These values are treated as generic parameters for ABS filament and discrepancies between different colors may be present.}
     \label{fig:table_ABS_parameters}
 \end{figure}
 
+In order to evaluate \Cref{eq:PDE} one can use the Method of Lines (MOL) in order to numerically compute the solution by Python. The derivative is approximated by means of the \textit{Forward Euler Method} (i.e,$\frac{du_i}{dt}\approx\frac{u_i^{n+1}-u_i^n}{\Delta t}$). Substitution in \Cref{eq:PDE} leads to 
+\begin{align}
+    \frac{dT_i}{dt} \approx \underbrace{\frac{\lambda}{\rho C_p}}_{a_{\text{th}}}\frac{T_{i+1}-2T_i+T_{i-1}}{\Delta s^2}-\underbrace{\frac{3\alpha_{\text{air}}}{\rho C_p h}}_{\beta_{\text{air}}} \left(T_i-T_e\right)+\underbrace{\frac{\alpha_{\text{bed}}}{\rho C_p h}}_{\beta_{\text{bed}}} \left(T_b-T_i\right).
+\end{align}
+
+\begin{figure}[htbp]
+    \centering
+    \animategraphics[
+        controls,
+        loop,
+        width=0.8\linewidth
+    ]{1.5}{frames/frame-}{000}{29}
+    \caption{Printing and cooling of the filament.}
+\end{figure}
 
 \section{Finite State Machine}
 
