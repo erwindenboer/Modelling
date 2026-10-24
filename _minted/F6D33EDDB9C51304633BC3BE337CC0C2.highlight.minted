@@ -1,0 +1,152 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{k+kn}{import}\PYG{+w}{ }\PYG{n+nn}{control}\PYG{+w}{ }\PYG{k}{as}\PYG{+w}{ }\PYG{n+nn}{co}
+\PYG{k+kn}{import}\PYG{+w}{ }\PYG{n+nn}{numpy}\PYG{+w}{ }\PYG{k}{as}\PYG{+w}{ }\PYG{n+nn}{np}
+\PYG{k+kn}{import}\PYG{+w}{ }\PYG{n+nn}{sympy}\PYG{+w}{ }\PYG{k}{as}\PYG{+w}{ }\PYG{n+nn}{sp}
+\PYG{k+kn}{import}\PYG{+w}{ }\PYG{n+nn}{matplotlib.pyplot}\PYG{+w}{ }\PYG{k}{as}\PYG{+w}{ }\PYG{n+nn}{plt}
+
+\PYG{n}{data} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{genfromtxt}\PYG{p}{(}
+    \PYG{l+s+s2}{\PYGZdq{}Efteling.csv\PYGZdq{}}\PYG{p}{,}
+    \PYG{n}{delimiter}\PYG{o}{=}\PYG{l+s+s2}{\PYGZdq{},\PYGZdq{}}\PYG{p}{,}
+    \PYG{n}{names}\PYG{o}{=}\PYG{k+kc}{True}
+\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{} Begin met frequenties tot en met 20}
+\PYG{n}{selection} \PYG{o}{=} \PYG{p}{(}\PYG{n}{data}\PYG{p}{[}\PYG{l+s+s2}{\PYGZdq{}rank\PYGZdq{}}\PYG{p}{]} \PYG{o}{\PYGZlt{}=} \PYG{l+m+mi}{250}\PYG{p}{)}
+
+\PYG{n}{k} \PYG{o}{=} \PYG{n}{data}\PYG{p}{[}\PYG{l+s+s2}{\PYGZdq{}turns\PYGZus{}n\PYGZdq{}}\PYG{p}{][}\PYG{n}{selection}\PYG{p}{]}
+\PYG{n}{c} \PYG{o}{=} \PYG{n}{data}\PYG{p}{[}\PYG{l+s+s2}{\PYGZdq{}re\PYGZdq{}}\PYG{p}{][}\PYG{n}{selection}\PYG{p}{]} \PYG{o}{+} \PYG{l+m+mi}{1}\PYG{n}{j} \PYG{o}{*} \PYG{n}{data}\PYG{p}{[}\PYG{l+s+s2}{\PYGZdq{}im\PYGZdq{}}\PYG{p}{][}\PYG{n}{selection}\PYG{p}{]}
+
+\PYG{n}{T} \PYG{o}{=} \PYG{l+m+mi}{10}
+\PYG{n}{Omega} \PYG{o}{=} \PYG{l+m+mi}{2} \PYG{o}{*} \PYG{n}{np}\PYG{o}{.}\PYG{n}{pi} \PYG{o}{/} \PYG{n}{T}
+\PYG{n}{time} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{linspace}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{T}\PYG{p}{,} \PYG{l+m+mi}{2000}\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{} Iedere rij is één Four term; tel de rijen op}
+\PYG{n}{z} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{sum}\PYG{p}{(}
+    \PYG{n}{c}\PYG{p}{[:,} \PYG{k+kc}{None}\PYG{p}{]} \PYG{o}{*} \PYG{n}{np}\PYG{o}{.}\PYG{n}{exp}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{n}{j} \PYG{o}{*} \PYG{n}{k}\PYG{p}{[:,} \PYG{k+kc}{None}\PYG{p}{]} \PYG{o}{*} \PYG{n}{Omega} \PYG{o}{*} \PYG{n}{time}\PYG{p}{[}\PYG{k+kc}{None}\PYG{p}{,} \PYG{p}{:]),}
+    \PYG{n}{axis}\PYG{o}{=}\PYG{l+m+mi}{0}
+\PYG{p}{)}
+
+\PYG{n}{x} \PYG{o}{=} \PYG{n}{z}\PYG{o}{.}\PYG{n}{real}
+\PYG{n}{y} \PYG{o}{=} \PYG{n}{z}\PYG{o}{.}\PYG{n}{imag}
+
+\PYG{c+c1}{\PYGZsh{} System parameters}
+\PYG{n}{r\PYGZus{}m}     \PYG{o}{=} \PYG{l+m+mf}{11e\PYGZhy{}3} \PYG{c+c1}{\PYGZsh{} motor radius}
+\PYG{n}{K\PYGZus{}m}     \PYG{o}{=} \PYG{l+m+mf}{0.07}  \PYG{c+c1}{\PYGZsh{} motor constant}
+\PYG{n}{L\PYGZus{}m}     \PYG{o}{=} \PYG{l+m+mf}{10e\PYGZhy{}3} \PYG{c+c1}{\PYGZsh{} motor inductance}
+\PYG{n}{m}       \PYG{o}{=} \PYG{l+m+mf}{60e\PYGZhy{}3} \PYG{c+c1}{\PYGZsh{} printer head mass}
+\PYG{n}{J\PYGZus{}m}     \PYG{o}{=} \PYG{l+m+mf}{8e\PYGZhy{}6}  \PYG{c+c1}{\PYGZsh{} motor inertia}
+\PYG{n}{R\PYGZus{}m}     \PYG{o}{=} \PYG{l+m+mi}{90}    \PYG{c+c1}{\PYGZsh{} motor resistance}
+\PYG{n}{mu\PYGZus{}lx}   \PYG{o}{=} \PYG{l+m+mf}{0.002} \PYG{c+c1}{\PYGZsh{} linear bearing friction, x\PYGZhy{}direction}
+\PYG{n}{mu\PYGZus{}ly}   \PYG{o}{=} \PYG{l+m+mf}{0.001} \PYG{c+c1}{\PYGZsh{} linear bearing friction, y\PYGZhy{}direction}
+\PYG{n}{mu\PYGZus{}r}    \PYG{o}{=} \PYG{l+m+mf}{0.003} \PYG{c+c1}{\PYGZsh{} Rolling bearing friction}
+\PYG{n}{dx}      \PYG{o}{=} \PYG{l+m+mf}{0.29}  \PYG{c+c1}{\PYGZsh{} Print bed length}
+\PYG{n}{dy}      \PYG{o}{=} \PYG{l+m+mf}{0.29}  \PYG{c+c1}{\PYGZsh{} Print bed height}
+
+\PYG{c+c1}{\PYGZsh{}derived system formulas}
+\PYG{n}{J\PYGZus{}eff}   \PYG{o}{=} \PYG{n}{J\PYGZus{}m}\PYG{o}{+}\PYG{n}{m}\PYG{o}{*}\PYG{n}{r\PYGZus{}m}\PYG{o}{**}\PYG{l+m+mi}{2}\PYG{o}{/}\PYG{l+m+mi}{2} \PYG{c+c1}{\PYGZsh{} effective inertia}
+\PYG{n}{d\PYGZus{}s}     \PYG{o}{=} \PYG{n}{r\PYGZus{}m}\PYG{o}{**}\PYG{l+m+mi}{2}\PYG{o}{/}\PYG{l+m+mi}{4}\PYG{o}{*}\PYG{p}{(}\PYG{n}{mu\PYGZus{}lx} \PYG{o}{+} \PYG{n}{mu\PYGZus{}ly} \PYG{o}{+} \PYG{l+m+mi}{12}\PYG{o}{*}\PYG{n}{mu\PYGZus{}r}\PYG{p}{)} \PYG{c+c1}{\PYGZsh{}self friction}
+\PYG{n}{d\PYGZus{}c}     \PYG{o}{=} \PYG{n}{r\PYGZus{}m}\PYG{o}{**}\PYG{l+m+mi}{2}\PYG{o}{/}\PYG{l+m+mi}{4}\PYG{o}{*}\PYG{p}{(}\PYG{n}{mu\PYGZus{}lx} \PYG{o}{\PYGZhy{}} \PYG{n}{mu\PYGZus{}ly} \PYG{o}{+} \PYG{l+m+mi}{4}\PYG{o}{*}\PYG{n}{mu\PYGZus{}r}\PYG{p}{)} \PYG{c+c1}{\PYGZsh{}coupled friction}
+\PYG{n}{x\PYGZus{}c}     \PYG{o}{=} \PYG{n}{dx}\PYG{o}{/}\PYG{l+m+mi}{2} \PYG{c+c1}{\PYGZsh{}center of printbed x\PYGZhy{}direction}
+\PYG{n}{y\PYGZus{}c}     \PYG{o}{=} \PYG{n}{dy}\PYG{o}{/}\PYG{l+m+mi}{2} \PYG{c+c1}{\PYGZsh{}center of printbed y\PYGZhy{}direction}
+\PYG{n}{Time}    \PYG{o}{=} \PYG{l+m+mi}{10} \PYG{c+c1}{\PYGZsh{}Omlooptijd}
+\PYG{n}{Omega}   \PYG{o}{=} \PYG{l+m+mi}{2}\PYG{o}{*}\PYG{n}{np}\PYG{o}{.}\PYG{n}{pi}\PYG{o}{/}\PYG{n}{Time}
+
+\PYG{c+c1}{\PYGZsh{} State matrix}
+\PYG{n}{A\PYGZus{}x} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{array}\PYG{p}{([[}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{1} \PYG{p}{,}\PYG{l+m+mi}{0}\PYG{p}{],}
+              \PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{o}{\PYGZhy{}}\PYG{p}{(}\PYG{n}{d\PYGZus{}s}\PYG{o}{+}\PYG{n}{d\PYGZus{}c}\PYG{p}{)}\PYG{o}{/}\PYG{n}{J\PYGZus{}eff}\PYG{p}{,} \PYG{n}{r\PYGZus{}m}\PYG{o}{*}\PYG{n}{K\PYGZus{}m}\PYG{o}{/}\PYG{p}{(}\PYG{l+m+mi}{2}\PYG{o}{*}\PYG{n}{J\PYGZus{}eff}\PYG{p}{)],}
+              \PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{2}\PYG{o}{*}\PYG{n}{K\PYGZus{}m}\PYG{o}{/}\PYG{p}{(}\PYG{n}{r\PYGZus{}m}\PYG{o}{*}\PYG{n}{L\PYGZus{}m}\PYG{p}{),} \PYG{o}{\PYGZhy{}}\PYG{n}{R\PYGZus{}m}\PYG{o}{/}\PYG{n}{L\PYGZus{}m}\PYG{p}{]])}
+
+\PYG{c+c1}{\PYGZsh{} State matrix}
+\PYG{n}{A\PYGZus{}y} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{array}\PYG{p}{([[}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{1} \PYG{p}{,}\PYG{l+m+mi}{0}\PYG{p}{],}
+              \PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{o}{\PYGZhy{}}\PYG{p}{(}\PYG{n}{d\PYGZus{}s}\PYG{o}{\PYGZhy{}}\PYG{n}{d\PYGZus{}c}\PYG{p}{)}\PYG{o}{/}\PYG{n}{J\PYGZus{}eff}\PYG{p}{,} \PYG{n}{r\PYGZus{}m}\PYG{o}{*}\PYG{n}{K\PYGZus{}m}\PYG{o}{/}\PYG{p}{(}\PYG{l+m+mi}{2}\PYG{o}{*}\PYG{n}{J\PYGZus{}eff}\PYG{p}{)],}
+              \PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{2}\PYG{o}{*}\PYG{n}{K\PYGZus{}m}\PYG{o}{/}\PYG{p}{(}\PYG{n}{r\PYGZus{}m}\PYG{o}{*}\PYG{n}{L\PYGZus{}m}\PYG{p}{),} \PYG{o}{\PYGZhy{}}\PYG{n}{R\PYGZus{}m}\PYG{o}{/}\PYG{n}{L\PYGZus{}m}\PYG{p}{]])}
+
+\PYG{c+c1}{\PYGZsh{} Input matrix}
+\PYG{n}{B} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{array}\PYG{p}{([[}\PYG{l+m+mi}{0}\PYG{p}{],}
+              \PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{],}
+              \PYG{p}{[}\PYG{l+m+mi}{1}\PYG{o}{/}\PYG{n}{L\PYGZus{}m}\PYG{p}{]])}
+
+\PYG{c+c1}{\PYGZsh{} Output matrix}
+\PYG{n}{C} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{array}\PYG{p}{([}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{l+m+mi}{0}\PYG{p}{,}\PYG{l+m+mi}{0}\PYG{p}{])}
+
+\PYG{c+c1}{\PYGZsh{} Direct feedthrough matrix}
+\PYG{n}{D} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{array}\PYG{p}{([}\PYG{l+m+mi}{0}\PYG{p}{])}
+
+\PYG{c+c1}{\PYGZsh{} Create the state\PYGZhy{}space model}
+\PYG{n}{sys\PYGZus{}x} \PYG{o}{=} \PYG{n}{co}\PYG{o}{.}\PYG{n}{ss}\PYG{p}{(}\PYG{n}{A\PYGZus{}x}\PYG{p}{,} \PYG{n}{B}\PYG{p}{,} \PYG{n}{C}\PYG{p}{,} \PYG{n}{D}\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{} Create the state\PYGZhy{}space model}
+\PYG{n}{sys\PYGZus{}y} \PYG{o}{=} \PYG{n}{co}\PYG{o}{.}\PYG{n}{ss}\PYG{p}{(}\PYG{n}{A\PYGZus{}y}\PYG{p}{,} \PYG{n}{B}\PYG{p}{,} \PYG{n}{C}\PYG{p}{,} \PYG{n}{D}\PYG{p}{)}
+
+\PYG{n}{t} \PYG{o}{=} \PYG{n}{sp}\PYG{o}{.}\PYG{n}{Symbol}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}t\PYGZdq{}}\PYG{p}{,} \PYG{n}{real}\PYG{o}{=}\PYG{k+kc}{True}\PYG{p}{)}
+
+\PYG{n}{x\PYGZus{}raw} \PYG{o}{=} \PYG{n}{sp}\PYG{o}{.}\PYG{n}{Add}\PYG{p}{(}\PYG{o}{*}\PYG{p}{[}
+    \PYG{n+nb}{float}\PYG{p}{(}\PYG{n}{ck}\PYG{o}{.}\PYG{n}{real}\PYG{p}{)} \PYG{o}{*} \PYG{n}{sp}\PYG{o}{.}\PYG{n}{cos}\PYG{p}{(}\PYG{n+nb}{int}\PYG{p}{(}\PYG{n}{ki}\PYG{p}{)} \PYG{o}{*} \PYG{n}{Omega} \PYG{o}{*} \PYG{n}{t}\PYG{p}{)}
+    \PYG{o}{\PYGZhy{}} \PYG{n+nb}{float}\PYG{p}{(}\PYG{n}{ck}\PYG{o}{.}\PYG{n}{imag}\PYG{p}{)} \PYG{o}{*} \PYG{n}{sp}\PYG{o}{.}\PYG{n}{sin}\PYG{p}{(}\PYG{n+nb}{int}\PYG{p}{(}\PYG{n}{ki}\PYG{p}{)} \PYG{o}{*} \PYG{n}{Omega} \PYG{o}{*} \PYG{n}{t}\PYG{p}{)}
+    \PYG{k}{for} \PYG{n}{ki}\PYG{p}{,} \PYG{n}{ck} \PYG{o+ow}{in} \PYG{n+nb}{zip}\PYG{p}{(}\PYG{n}{k}\PYG{p}{,} \PYG{n}{c}\PYG{p}{)}
+\PYG{p}{])}
+
+\PYG{n}{y\PYGZus{}raw} \PYG{o}{=} \PYG{n}{sp}\PYG{o}{.}\PYG{n}{Add}\PYG{p}{(}\PYG{o}{*}\PYG{p}{[}
+    \PYG{n+nb}{float}\PYG{p}{(}\PYG{n}{ck}\PYG{o}{.}\PYG{n}{real}\PYG{p}{)} \PYG{o}{*} \PYG{n}{sp}\PYG{o}{.}\PYG{n}{sin}\PYG{p}{(}\PYG{n+nb}{int}\PYG{p}{(}\PYG{n}{ki}\PYG{p}{)} \PYG{o}{*} \PYG{n}{Omega} \PYG{o}{*} \PYG{n}{t}\PYG{p}{)}
+    \PYG{o}{+} \PYG{n+nb}{float}\PYG{p}{(}\PYG{n}{ck}\PYG{o}{.}\PYG{n}{imag}\PYG{p}{)} \PYG{o}{*} \PYG{n}{sp}\PYG{o}{.}\PYG{n}{cos}\PYG{p}{(}\PYG{n+nb}{int}\PYG{p}{(}\PYG{n}{ki}\PYG{p}{)} \PYG{o}{*} \PYG{n}{Omega} \PYG{o}{*} \PYG{n}{t}\PYG{p}{)}
+    \PYG{k}{for} \PYG{n}{ki}\PYG{p}{,} \PYG{n}{ck} \PYG{o+ow}{in} \PYG{n+nb}{zip}\PYG{p}{(}\PYG{n}{k}\PYG{p}{,} \PYG{n}{c}\PYG{p}{)}
+\PYG{p}{])}
+
+\PYG{n}{scale} \PYG{o}{=} \PYG{l+m+mf}{0.20} \PYG{o}{/} \PYG{n+nb}{max}\PYG{p}{(}\PYG{n}{np}\PYG{o}{.}\PYG{n}{ptp}\PYG{p}{(}\PYG{n}{x}\PYG{p}{),} \PYG{n}{np}\PYG{o}{.}\PYG{n}{ptp}\PYG{p}{(}\PYG{n}{y}\PYG{p}{))}
+
+\PYG{n}{x\PYGZus{}mid} \PYG{o}{=} \PYG{p}{(}\PYG{n}{x}\PYG{o}{.}\PYG{n}{max}\PYG{p}{()} \PYG{o}{+} \PYG{n}{x}\PYG{o}{.}\PYG{n}{min}\PYG{p}{())} \PYG{o}{/} \PYG{l+m+mi}{2}
+\PYG{n}{y\PYGZus{}mid} \PYG{o}{=} \PYG{p}{(}\PYG{n}{y}\PYG{o}{.}\PYG{n}{max}\PYG{p}{()} \PYG{o}{+} \PYG{n}{y}\PYG{o}{.}\PYG{n}{min}\PYG{p}{())} \PYG{o}{/} \PYG{l+m+mi}{2}
+
+\PYG{n}{x\PYGZus{}ref} \PYG{o}{=} \PYG{l+m+mf}{0.145} \PYG{o}{+} \PYG{n}{scale} \PYG{o}{*} \PYG{p}{(}\PYG{n}{x\PYGZus{}raw} \PYG{o}{\PYGZhy{}} \PYG{n}{x\PYGZus{}mid}\PYG{p}{)}
+\PYG{n}{y\PYGZus{}ref} \PYG{o}{=} \PYG{l+m+mf}{0.145} \PYG{o}{\PYGZhy{}} \PYG{n}{scale} \PYG{o}{*} \PYG{p}{(}\PYG{n}{y\PYGZus{}raw} \PYG{o}{\PYGZhy{}} \PYG{n}{y\PYGZus{}mid}\PYG{p}{)}
+
+\PYG{n}{a} \PYG{o}{=} \PYG{l+m+mf}{0.1}
+\PYG{n}{b} \PYG{o}{=} \PYG{l+m+mf}{0.07}
+
+\PYG{c+c1}{\PYGZsh{}x\PYGZus{}ref       = x\PYGZus{}c + a * sp.cos(Omega*t)}
+\PYG{c+c1}{\PYGZsh{}y\PYGZus{}ref       = y\PYGZus{}c + b * sp.sin(Omega*t)}
+\PYG{n}{dot\PYGZus{}x}       \PYG{o}{=}  \PYG{n}{sp}\PYG{o}{.}\PYG{n}{diff}\PYG{p}{(}\PYG{n}{x\PYGZus{}ref}\PYG{p}{)}
+\PYG{n}{dot\PYGZus{}y}       \PYG{o}{=}  \PYG{n}{sp}\PYG{o}{.}\PYG{n}{diff}\PYG{p}{(}\PYG{n}{y\PYGZus{}ref}\PYG{p}{)}
+\PYG{n}{dotdot\PYGZus{}x}    \PYG{o}{=}  \PYG{n}{sp}\PYG{o}{.}\PYG{n}{diff}\PYG{p}{(}\PYG{n}{dot\PYGZus{}x}\PYG{p}{)}
+\PYG{n}{dotdot\PYGZus{}y}    \PYG{o}{=}  \PYG{n}{sp}\PYG{o}{.}\PYG{n}{diff}\PYG{p}{(}\PYG{n}{dot\PYGZus{}y}\PYG{p}{)}
+
+\PYG{n}{i\PYGZus{}x} \PYG{o}{=} \PYG{l+m+mi}{2}\PYG{o}{/}\PYG{p}{(}\PYG{n}{r\PYGZus{}m}\PYG{o}{*}\PYG{n}{K\PYGZus{}m}\PYG{p}{)}\PYG{o}{*}\PYG{p}{(}\PYG{n}{J\PYGZus{}eff}\PYG{o}{*}\PYG{n}{dotdot\PYGZus{}x}\PYG{o}{+}\PYG{p}{(}\PYG{n}{d\PYGZus{}s}\PYG{o}{+}\PYG{n}{d\PYGZus{}c}\PYG{p}{)}\PYG{o}{*}\PYG{n}{dot\PYGZus{}x}\PYG{p}{)}
+\PYG{n}{i\PYGZus{}y} \PYG{o}{=} \PYG{l+m+mi}{2}\PYG{o}{/}\PYG{p}{(}\PYG{n}{r\PYGZus{}m}\PYG{o}{*}\PYG{n}{K\PYGZus{}m}\PYG{p}{)}\PYG{o}{*}\PYG{p}{(}\PYG{n}{J\PYGZus{}eff}\PYG{o}{*}\PYG{n}{dotdot\PYGZus{}y}\PYG{o}{+}\PYG{p}{(}\PYG{n}{d\PYGZus{}s}\PYG{o}{\PYGZhy{}}\PYG{n}{d\PYGZus{}c}\PYG{p}{)}\PYG{o}{*}\PYG{n}{dot\PYGZus{}y}\PYG{p}{)}
+
+\PYG{n}{dot\PYGZus{}i\PYGZus{}x} \PYG{o}{=} \PYG{n}{sp}\PYG{o}{.}\PYG{n}{diff}\PYG{p}{(}\PYG{n}{i\PYGZus{}x}\PYG{p}{)}
+\PYG{n}{dot\PYGZus{}i\PYGZus{}y} \PYG{o}{=} \PYG{n}{sp}\PYG{o}{.}\PYG{n}{diff}\PYG{p}{(}\PYG{n}{i\PYGZus{}y}\PYG{p}{)}
+
+\PYG{n}{u\PYGZus{}x} \PYG{o}{=} \PYG{n}{L\PYGZus{}m}\PYG{o}{*}\PYG{n}{dot\PYGZus{}i\PYGZus{}x}\PYG{o}{+}\PYG{n}{R\PYGZus{}m}\PYG{o}{*}\PYG{n}{i\PYGZus{}x}\PYG{o}{+}\PYG{p}{(}\PYG{l+m+mi}{2}\PYG{o}{*}\PYG{n}{K\PYGZus{}m}\PYG{o}{/}\PYG{n}{r\PYGZus{}m}\PYG{p}{)}\PYG{o}{*}\PYG{n}{dot\PYGZus{}x}
+\PYG{n}{u\PYGZus{}y} \PYG{o}{=} \PYG{n}{L\PYGZus{}m}\PYG{o}{*}\PYG{n}{dot\PYGZus{}i\PYGZus{}y}\PYG{o}{+}\PYG{n}{R\PYGZus{}m}\PYG{o}{*}\PYG{n}{i\PYGZus{}y}\PYG{o}{+}\PYG{p}{(}\PYG{l+m+mi}{2}\PYG{o}{*}\PYG{n}{K\PYGZus{}m}\PYG{o}{/}\PYG{n}{r\PYGZus{}m}\PYG{p}{)}\PYG{o}{*}\PYG{n}{dot\PYGZus{}y}
+
+\PYG{n}{x\PYGZus{}x0} \PYG{o}{=} \PYG{p}{[}\PYG{n}{x\PYGZus{}ref}\PYG{o}{.}\PYG{n}{subs}\PYG{p}{(}\PYG{n}{t}\PYG{p}{,}\PYG{l+m+mi}{0}\PYG{p}{),} \PYG{n}{dot\PYGZus{}x}\PYG{o}{.}\PYG{n}{subs}\PYG{p}{(}\PYG{n}{t}\PYG{p}{,}\PYG{l+m+mi}{0}\PYG{p}{),} \PYG{n}{i\PYGZus{}x}\PYG{o}{.}\PYG{n}{subs}\PYG{p}{(}\PYG{n}{t}\PYG{p}{,}\PYG{l+m+mi}{0}\PYG{p}{)]}
+\PYG{n}{y\PYGZus{}y0} \PYG{o}{=} \PYG{p}{[}\PYG{n}{y\PYGZus{}ref}\PYG{o}{.}\PYG{n}{subs}\PYG{p}{(}\PYG{n}{t}\PYG{p}{,}\PYG{l+m+mi}{0}\PYG{p}{),} \PYG{n}{dot\PYGZus{}y}\PYG{o}{.}\PYG{n}{subs}\PYG{p}{(}\PYG{n}{t}\PYG{p}{,}\PYG{l+m+mi}{0}\PYG{p}{),} \PYG{n}{i\PYGZus{}y}\PYG{o}{.}\PYG{n}{subs}\PYG{p}{(}\PYG{n}{t}\PYG{p}{,}\PYG{l+m+mi}{0}\PYG{p}{)]}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{n+nb}{type}\PYG{p}{(}\PYG{n}{x\PYGZus{}x0}\PYG{p}{))}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{y\PYGZus{}y0}\PYG{p}{)}
+
+\PYG{n}{timepts} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{linspace}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{Time}\PYG{p}{,} \PYG{l+m+mi}{1000}\PYG{p}{)}
+\PYG{n}{ux\PYGZus{}function} \PYG{o}{=} \PYG{n}{sp}\PYG{o}{.}\PYG{n}{lambdify}\PYG{p}{(}\PYG{n}{t}\PYG{p}{,} \PYG{n}{u\PYGZus{}x}\PYG{p}{,} \PYG{n}{modules}\PYG{o}{=}\PYG{l+s+s2}{\PYGZdq{}numpy\PYGZdq{}}\PYG{p}{)}
+\PYG{n}{ux\PYGZus{}values} \PYG{o}{=} \PYG{n}{ux\PYGZus{}function}\PYG{p}{(}\PYG{n}{timepts}\PYG{p}{)}
+\PYG{n}{x0\PYGZus{}values} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{array}\PYG{p}{(}\PYG{n}{x\PYGZus{}x0}\PYG{p}{,} \PYG{n}{dtype}\PYG{o}{=}\PYG{n+nb}{float}\PYG{p}{)}
+\PYG{n}{tout}\PYG{p}{,} \PYG{n}{x\PYGZus{}position} \PYG{o}{=} \PYG{n}{co}\PYG{o}{.}\PYG{n}{forced\PYGZus{}response}\PYG{p}{(}
+    \PYG{n}{sys\PYGZus{}x}\PYG{p}{,} \PYG{n}{timepts}\PYG{p}{,} \PYG{n}{ux\PYGZus{}values}\PYG{p}{,} \PYG{n}{x0\PYGZus{}values}
+\PYG{p}{)}
+
+\PYG{n}{uy\PYGZus{}function} \PYG{o}{=} \PYG{n}{sp}\PYG{o}{.}\PYG{n}{lambdify}\PYG{p}{(}\PYG{n}{t}\PYG{p}{,} \PYG{n}{u\PYGZus{}y}\PYG{p}{,} \PYG{n}{modules}\PYG{o}{=}\PYG{l+s+s2}{\PYGZdq{}numpy\PYGZdq{}}\PYG{p}{)}
+\PYG{n}{uy\PYGZus{}values} \PYG{o}{=} \PYG{n}{uy\PYGZus{}function}\PYG{p}{(}\PYG{n}{timepts}\PYG{p}{)}
+\PYG{n}{y0\PYGZus{}values} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{array}\PYG{p}{(}\PYG{n}{y\PYGZus{}y0}\PYG{p}{,} \PYG{n}{dtype}\PYG{o}{=}\PYG{n+nb}{float}\PYG{p}{)}
+\PYG{n}{tout}\PYG{p}{,} \PYG{n}{y\PYGZus{}position} \PYG{o}{=} \PYG{n}{co}\PYG{o}{.}\PYG{n}{forced\PYGZus{}response}\PYG{p}{(}
+    \PYG{n}{sys\PYGZus{}y}\PYG{p}{,} \PYG{n}{timepts}\PYG{p}{,} \PYG{n}{uy\PYGZus{}values}\PYG{p}{,} \PYG{n}{y0\PYGZus{}values}
+\PYG{p}{)}
+
+\PYG{n}{plt}\PYG{o}{.}\PYG{n}{figure}\PYG{p}{()}
+\PYG{n}{plt}\PYG{o}{.}\PYG{n}{plot}\PYG{p}{(}\PYG{n}{x\PYGZus{}position}\PYG{p}{,} \PYG{n}{y\PYGZus{}position}\PYG{p}{,} \PYG{n}{color} \PYG{o}{=} \PYG{l+s+s1}{\PYGZsq{}r\PYGZsq{}}\PYG{p}{)}
+\PYG{n}{plt}\PYG{o}{.}\PYG{n}{xlabel}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}x position\PYGZsq{}}\PYG{p}{)}
+\PYG{n}{plt}\PYG{o}{.}\PYG{n}{ylabel}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}y position\PYGZsq{}}\PYG{p}{)}
+\PYG{n}{plt}\PYG{o}{.}\PYG{n}{title}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}Printed shape\PYGZsq{}}\PYG{p}{)}
+\PYG{n}{plt}\PYG{o}{.}\PYG{n}{xlim}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{dx}\PYG{p}{)}
+\PYG{n}{plt}\PYG{o}{.}\PYG{n}{ylim}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{dy}\PYG{p}{)}
+\PYG{n}{plt}\PYG{o}{.}\PYG{n}{grid}\PYG{p}{(}\PYG{k+kc}{True}\PYG{p}{)}
+\PYG{n}{plt}\PYG{o}{.}\PYG{n}{axis}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}equal\PYGZdq{}}\PYG{p}{)}
+\PYG{n}{plt}\PYG{o}{.}\PYG{n}{show}\PYG{p}{()}
+\end{MintedVerbatim}

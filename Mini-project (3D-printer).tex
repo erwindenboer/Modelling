@@ -15,20 +15,18 @@
 
 \par\noindent\rule{\textwidth}{0.4pt}
 
-\section{Introduction}
+\section*{Introduction}
+\addcontentsline{toc}{section}{Introduction}
 
-The mini-project involves the modelling of a 3D-printer in three different domains.
-The domains are Physical, Discrete, and Hybrid.
-In \Cref{fig:3D-printer} the schematic overview with the associate variable names and orientations are shown. The orientation and names of the corresponding physical quantity are respected in the derivation of the models. The mandatory variable names are given in \Cref{tab:variables}. The formulas contain auxiliary variables which may not be given in this table. 
-
+The mini-project involves the modelling of a 3D-printer in three domains: physical, discrete, and hybrid.
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.68\linewidth]{3D-printer.png}
+    \includegraphics[width=0.45\linewidth]{3D-printer.png}
     \caption{The schematic view of the 3D-printer.}
     \label{fig:3D-printer}
 \end{figure}
+In \Cref{fig:3D-printer} the schematic overview with the associated variable names and orientations is shown. The orientation and names of the corresponding physical quantity are respected in the derivation of the models. The mandatory variable names are given in \Cref{tab:variables}. The formulas contain auxiliary variables which may not be given in this table. 
 
-\clearpage
 \begin{table}[p]
     \centering
     \caption{Variables and parameters of the 3D-printer.}
@@ -150,84 +148,242 @@ The displacement of the belt by the driving motors having a radius of $r_m$ can 
     \Delta s = r_m \Delta \theta.
 \end{equation}
 
-The leads to the equations for the left and right motor being described by 
-\begin{align}
-    r_m \Delta \theta_l &= \Delta x + \Delta y\\
+This leads to the following equations for the left and right motor being described by 
+\begin{equation}
+\begin{aligned}
+    r_m \Delta \theta_l &= \Delta x + \Delta y,
+    &\qquad
     r_m \Delta \theta_r &= \Delta x - \Delta y.
-\end{align}
+\end{aligned}
+\end{equation}
 
-In order to find $\Delta x$, one could add both equations 
-\begin{align}
-    \left(\Delta x + \Delta y\right) + \left(\Delta x - \Delta y\right) &= r_m \Delta \theta_l + r_m \Delta \theta_r,\\
-    2 \Delta x &= r_m \left(\Delta \theta_l +\Delta \theta_r \right),\\
-    \Delta x &= \frac{r_m}{2} \left(\Delta \theta_l +\Delta \theta_r \right).
-\end{align}
+Adding and subtracting the two belt equations gives the
+displacements $\Delta x$ and $\Delta y$, respectively:
+\begin{equation}
+\begin{array}{@{}c@{\quad}|@{\quad}c@{}}
+    \begin{aligned}
+        2\Delta x
+        &= r_m\Delta\theta_l+r_m\Delta\theta_r \\[0.5em]
+        &= r_m(\Delta\theta_l+\Delta\theta_r), \\[0.5em]
+        \Delta x
+        &= \frac{r_m}{2}
+           (\Delta\theta_l+\Delta\theta_r).
+    \end{aligned}
+    &
+    \begin{aligned}
+        2\Delta y
+        &= r_m\Delta\theta_l-r_m\Delta\theta_r \\[0.5em]
+        &= r_m(\Delta\theta_l-\Delta\theta_r), \\[0.5em]
+        \Delta y
+        &= \frac{r_m}{2}
+           (\Delta\theta_l-\Delta\theta_r).
+    \end{aligned}
+\end{array}
+\end{equation}
 
-Similarly, the equation for $\Delta y$ can be found by substraction
-\begin{align}
-    \left(\Delta x + \Delta y\right) - \left(\Delta x - \Delta y\right) &= r_m \Delta \theta_l - r_m \Delta \theta_r,\\
-    2 \Delta y &= r_m \left(\Delta \theta_l - \Delta \theta_r \right),\\
-    \Delta y &= \frac{r_m}{2} \left(\Delta \theta_l -\Delta \theta_r \right).
-\end{align}
-
-When the reference is taken to be zero (i.e., $x_0,y_0,\theta_{l,0},\theta_{r,0}=0$), the prefix $\Delta$ can be discarded. The earlier derived equations simplifies to
-\begin{align}
-    x &= \frac{r_m}{2} \left(\theta_l + \theta_r \right),\\
+When the reference is taken to be zero (i.e., $x_0,y_0,\theta_{l,0},\theta_{r,0}=0$), the prefix $\Delta$ can be discarded. The earlier derived equations simplify to
+\begin{equation}
+\begin{aligned}
+    x &= \frac{r_m}{2} \left(\theta_l + \theta_r \right),
+    &\qquad
     y &= \frac{r_m}{2} \left(\theta_l - \theta_r \right).
-\end{align}
+\end{aligned}
+\end{equation}
 
 The velocities can be found by differentiation
-\begin{align}
-    \dot{x} &= \frac{r_m}{2} \left(\dot{\theta_l} + \dot{\theta_r}\right),\\
+\begin{equation}
+\begin{aligned}
+    \dot{x} &= \frac{r_m}{2} \left(\dot{\theta_l} + \dot{\theta_r}\right),
+    &\qquad
     \dot{y} &= \frac{r_m}{2} \left(\dot{\theta_l} - \dot{\theta_r}\right).
-\end{align}
+\end{aligned}
+\end{equation}
 
 The rotational speed is given by the derivative of the angle (i.e., $\dot{\theta}=\omega$). Therefore, the velocities can alternatively be denoted by
-\begin{align}
-    \dot{x} &= \frac{r_m}{2} \left(\omega_l + \omega_r\right),\\
-    \dot{y} &= \frac{r_m}{2} \left(\omega_l - \omega_r\right).
-\end{align}
+\begin{equation}
+\begin{aligned}
+    \dot{x} &= \frac{r_m}{2} \left(\omega_l + \omega_r\right),
+    &\qquad
+    \dot{y} &= \frac{r_m}{2} \left(\omega_l - \omega_r\right).\label{eq:velocity}
+\end{aligned}
+\end{equation}
+
+For completeness, the accelerations are the second derivatives
+\begin{equation}
+\begin{aligned}
+    \ddot{x} &= \frac{r_m}{2} \left(\dot{\omega_l} + \dot{\omega_r}\right),
+    &\qquad
+    \ddot{y} &= \frac{r_m}{2} \left(\dot{\omega_l} - \dot{\omega_r}\right).\label{eq:acceleration}
+\end{aligned}
+\end{equation}
 
 \subsection{Dynamics}
-
 The model of the DC motor coupled to a disk with an inertia is shown in \Cref{fig:DC-motor}.
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.7\linewidth]{DC-motor.png}
+    \includegraphics[width=0.6\linewidth]{DC-motor.png}
     \caption{The proposed DC motor modelled as an LR circuit.}
     \label{fig:DC-motor}
 \end{figure}
 
-Applying Kirchhoff's voltage law on the schematic of \Cref{fig:DC-motor} leads to\footnote{The derivative is normally denoted by a dot $\left(\text{e.g., }\dot{\theta}\right)$ in this assignment except when the differential quantity is current $\left(\text{i.e., }i\right)$. In that case, the explicit notation is used $\left(\text{i.e., }\frac{di}{dt}\right)$ in order to avoid confusion using a double dot $\left(\text{i.e., }\dot{i}\right)$.}
+\subsubsection{Electrical dynamics}
+The torque of the motor is related to the current flowing through the motor $\tau_m = K_m i$.
+Applying Kirchhoff's voltage law to the schematic of \Cref{fig:DC-motor} leads to\footnote{The derivative is normally denoted by a dot $\left(\text{e.g., }\dot{\theta}\right)$ in this report except when the differential quantity is current $\left(\text{i.e., }i\right)$. In that case, the explicit notation is used $\left(\text{i.e., }\frac{di}{dt}\right)$ in order to avoid confusion due to the double dot $\left(\text{i.e., }\dot{i}\right)$.}
 \begin{align}
-    u_m &= u_{L_m} + u_{R_m} + u_{\text{EMF}}\\
-    u_m &= L_m \frac{di}{dt} + R_m i + K_m \dot{\theta}\\
-    \frac{di}{dt} &= - \frac{R_m}{L_m}i - \frac{K_m}{L_m}\omega + \frac{1}{L_m}u_m
+    u_m &= u_{L_m} + u_{R_m} + u_{\text{EMF}},\\
+    u_m &= L_m \frac{di_m}{dt} + R_m i_m + K_m \dot{\theta},\\
+    L_m\frac{di_m}{dt} &= - R_mi_m - K_m\omega + u_m.\label{eq:motor_current}
 \end{align}
 
-The rotation of the disc and its inertia is related to the current flowing through the motor.
+\subsubsection{Mechanical dynamics}
+The printer head is modelled as a mass. The belts driven by the motors exert forces on the mass denoted by $F_x$ and $F_y$ in \Cref{fig:printhead-forces}. Friction due to the linear bearings causes an opposite force acting on the mass. This effect is modelled by the $\mu_{l,x}\dot{x}$ and $\mu_{l,y}\dot{y}$ vectors.
+\begin{figure}[htbp] 
+    \centering 
+    \begin{tikzpicture}[ 
+        >=Latex, 
+        force/.style={->,thick}, 
+        axis/.style={->, thin, gray}, 
+        every node/.style={font=\small} 
+        ]
+    
+        \draw[thick, fill=gray!12] (-0.8,-0.6) rectangle (0.8,0.6); \node at (0,0) {$m$};
+
+        \draw[force] (0.8,0) -- (1.5,0) node[right] {$F_x$};
+        \draw[force] (0,0.6) -- (0,1.1) node[above] {$F_y$};
+
+        \draw[force] (-0.8,0) -- (-1.5,0) node[left] {$\mu_{l,x}\dot{x}$};
+        \draw[force] (0,-0.6) -- (0,-1.1) node[below] {$\mu_{l,y}\dot{y}$};
+
+        \draw[axis] (-3,-1.8) -- (-2.2,-1.8) node[right] {$x$};
+        \draw[axis] (-3,-1.8) -- (-3,-1) node[above] {$y$}; 
+    \end{tikzpicture}
+    \caption{In-plane forces acting on the print head. Friction forces are shown for
+    positive velocities.} 
+    \label{fig:printhead-forces} 
+\end{figure}
+
+\paragraph{Euler-Lagrange}
+The Euler-Lagrange method can be used in order to efficiently derive the mechanical model for the system.
+The generalized coordinates and velocities are defined as
+\begin{equation}
+\begin{aligned}
+    q &=
+    \begin{bNiceMatrix}
+        \theta_l \\
+        \theta_r
+    \end{bNiceMatrix},
+    &\qquad
+    \dot{q} &=
+    \begin{bNiceMatrix}
+        \omega_l \\
+        \omega_r
+    \end{bNiceMatrix}.
+\end{aligned}
+\end{equation}
+These states directly determine the $x$ and $y$ velocity of the printer head via \Cref{eq:velocity}.
+
+The kinetic energy of the motor and printer head can be combined to determine the $K$ function of Euler-Lagrange
 \begin{align}
-    \tau &= K_m i \\
-    \tau &= J \dot{\omega}\\
-    \dot{\omega} &= \frac{K_m}{J}i.
+    K &= \underbrace{\frac{1}{2}J_m\left(\omega_l^2+\omega_r^2\right)}_{\text{Motor}}+\underbrace{\frac{1}{2}m\left(\dot{x}^2+\dot{y}^2\right)}_{\text{Printer head}}.
 \end{align}
+
+Substitution of the found kinematics with \Cref{eq:velocity} transforms the equation to
+\begin{align}
+    K &= \frac{1}{2}J_m\left(\omega_l^2+\omega_r^2\right)+\frac{1}{2}m\left(\left(\frac{r_m}{2} \left(\omega_l + \omega_r\right)\right)^2+\left(\frac{r_m}{2} \left(\omega_l - \omega_r\right)\right)^2\right),\\
+    L = K &= \frac{1}{2}\underbrace{\left(J_m+\frac{mr_m^2}{2}\right)}_{J_{\text{eff}}}\left(\omega_l^2+\omega_r^2\right)\label{eq:kinetic_energy}.
+\end{align}
+
+The Lagrangian function is defined by $L=K-P$. As there is no potential energy stored in the model (i.e, the belts are considered non-elastic and constant height) the function $P=0$. Therefore, $L=K$.
+
+The dissipation function consists of the linear and pulley bearings (i.e., $D=D_{\text{lin}}+D_{\text{pull}}$). The dissipation function for the linear bearings can be modeled and rewritten as
+\begin{align}
+    D_{\text{lin}} &= \frac{1}{2} \mu_{l,x} \dot{x}^2+ \frac{1}{2} \mu_{l,y} \dot{y}^2,\\
+    D_{\text{lin}} &= \frac{r_m^2}{8}\left[\mu_{l,x}\left(\omega_l+\omega_r\right)^2+\mu_{l,y}\left(\omega_l-\omega_r\right)^2\right].
+\end{align}
+
+It can be observed from \Cref{fig:3D-printer} that each motor drives a belt connected to the mass along two fixed pulleys and two pulleys attached to the printer head rail. For the fixed pulley, its rotational speed is equal to $\omega_{p}=\frac{r_m}{r_p}\omega_l$. Therefore, the dissipation function becomes 
+\begin{align*}
+    D_{\text{pul,fixed}} &= 2\frac{1}{2}\mu_r\left(r_p \omega_p\right)^2,\\
+    D_{\text{pul,fixed}} &= 2\frac{1}{2}\mu_r\left(r_m \omega_l\right)^2.
+\end{align*}
+
+The centers of the four pulleys attached to the printer head rail move in the $y$-direction. The dissipation term for a pulley with a relative tangential speed $v_p$ is stated as $D_p=\frac{1}{2}\mu_rv_p^2$. The relative tangential speed is equal to $v_p=\dot{x}$. Therefore,
+\begin{align}
+    D_{\text{pul,rail}} &= 4\frac{1}{2}\mu_r \dot{x}^2.
+\end{align}
+
+Adding the dissipation terms together (i.e, $D=D_{\text{lin}}+D_{\text{pul,fixed,l}}+D_{\text{pul,fixed,r}}+D_{\text{pul,rail}}$) and substitution of \Cref{eq:velocity} leads to
+\begin{align}
+    D(\omega_l,\omega_r) &= \frac{r_m^2}{8}\left[\mu_{l,x}\left(\omega_l+\omega_r\right)^2+\mu_{l,y}\left(\omega_l-\omega_r\right)^2\right] + \mu_r r_m^2\left(\omega_l^2+\omega_r^2\right)+\frac{1}{2}\mu_rr_m^2\left(\omega_l+\omega_r\right)^2.\label{eq:dissipation_function}
+\end{align}
+
+All elements of the \textit{Lagrange's equation of motion} are present. From this equation, the complete mechanical model can be derived
+\begin{align}
+    \frac{d}{dt}\frac{\partial L}{\partial {\dot{q}}}-\frac{\partial L}{\partial q} &= -\frac{\partial D}{\partial \dot{q}} +
+    \underbrace{ 
+    \begin{bNiceMatrix}
+      K_mi_{m,l} \\
+      K_mi_{m,r}  
+    \end{bNiceMatrix}
+    }_{\tau_m}.\label{eq:lagrange}
+\end{align}
+
+From \Cref{eq:kinetic_energy} it follows that
+\begin{equation}
+\begin{aligned}
+    \frac{\partial L}{\partial q} &=
+    \begin{bNiceMatrix}
+        0 \\
+        0
+    \end{bNiceMatrix},
+    &\qquad
+    \frac{d}{dt}\frac{\partial L}{\partial \dot{q}} &=
+    J_{\text{eff}}
+    \begin{bNiceMatrix}
+        \dot{\omega_l} \\
+        \dot{\omega_r}
+    \end{bNiceMatrix}.
+\end{aligned}
+\end{equation}
+
+From \Cref{eq:dissipation_function} the dissipation element is determined by
+\begin{align}
+    \frac{\partial D}{\partial \omega_l} &= \underbrace{\frac{r_m^2}{4}\left[\mu_{l,x}+\mu_{l,y}+12\mu_r\right]}_{d_s}\omega_l+\underbrace{\frac{r_m^2}{4}\left[\mu_{l,x}-\mu_{l,y}+4\mu_r\right]}_{d_c}\omega_r\\
+    \frac{\partial D}{\partial \omega_r} &= \underbrace{\frac{r_m^2}{4}\left[\mu_{l,x}-\mu_{l,y}+4\mu_r\right]}_{d_c}\omega_l+\underbrace{\frac{r_m^2}{4}\left[\mu_{l,x}+\mu_{l,y}+12\mu_r\right]}_{d_s}\omega_r.   
+\end{align}
+Which can be written compactly as 
+\begin{align}
+    \frac{\partial D}{\partial \dot{q}} &= 
+    \begin{bNiceMatrix}
+        d_s \omega_l + d_c \omega_r\\
+        d_c \omega_l + d_s \omega_r    
+    \end{bNiceMatrix}.
+\end{align}
+
+Substitution into \Cref{eq:lagrange} results in 
+\begin{align}
+    J_{\text{eff}}\dot{\omega}_l &= K_m i_{m,l} - d_s\omega_l-d_c\omega_r,\label{eq:rotational_speed_l}\\
+    J_{\text{eff}}\dot{\omega}_r &= K_m i_{m,r} - d_c\omega_l-d_s\omega_r.\label{eq:rotational_speed_r}
+\end{align}
+
+\subsubsection{State-space model}
 
 The states are chosen as
 \begin{align}
-    \mathbf{x} &= \left[\theta_l \, \theta_r \, \omega_l \, \omega_r \, i_{m,l} \, i_{m,r}\right]^{\mathsf{T}}.
+    \mathbf{x} &= \left[\theta_l ,\; \theta_r ,\; \omega_l ,\; \omega_r ,\; i_{m,l} ,\; i_{m,r}\right]^{\mathsf{T}}.
 \end{align}
 
 The input vector is defined by
 \begin{align}
-    \mathbf{u} &= \left[u_{m,l} \, u_{m,r}\right]^{\mathsf{T}}.
+    \mathbf{u} &= \left[u_{m,l} ,\; u_{m,r}\right]^{\mathsf{T}}.
 \end{align}
 
-The positions of the 3D-printer are selected as the output vector of the system 
+The position of the printer head is selected as the output vector of the system 
 \begin{align}
-    \mathbf{y} = \left[x \, y\right]^{\mathsf{T}}.
+    \mathbf{y} = \left[x ,\; y\right]^{\mathsf{T}}.
 \end{align}
 
-Therefore, leading to the elaborate state-space description 
+This yields the following state-space representation
 \begin{equation}
 \begingroup
 \renewcommand{\arraystretch}{1.25}
@@ -238,17 +394,17 @@ Therefore, leading to the elaborate state-space description
         \begin{bNiceMatrix}[columns-width=9mm]
             0 & 0 & 1 & 0 & 0 & 0 \\
             0 & 0 & 0 & 1 & 0 & 0 \\
-            0 & 0 & 0 & 0
-                & \frac{K_{m,l}}{J_l} & 0 \\
-            0 & 0 & 0 & 0
-                & 0 & \frac{K_{m,r}}{J_r} \\
+            0 & 0 & -\frac{d_s}{J_{\text{eff}}} & -\frac{d_c}{J_{\text{eff}}}
+                & \frac{K_{m,l}}{J_{\text{eff}}} & 0 \\
+            0 & 0 & -\frac{d_c}{J_{\text{eff}}} & -\frac{d_s}{J_{\text{eff}}}
+                & 0 & \frac{K_{m,r}}{J_{\text{eff}}} \\
             0 & 0 & -\frac{K_{m,l}}{L_{m,l}} & 0
                 & -\frac{R_{m,l}}{L_{m,l}} & 0 \\
             0 & 0 & 0 & -\frac{K_{m,r}}{L_{m,r}}
                 & 0 & -\frac{R_{m,r}}{L_{m,r}}
         \end{bNiceMatrix}
     }_{\mathbf{A}}
-    \,\mathbf{x}
+    \;\mathbf{x}
     +
     \underbrace{
         \begin{bNiceMatrix}[columns-width=9mm]
@@ -260,7 +416,7 @@ Therefore, leading to the elaborate state-space description
             0 & \frac{1}{L_{m,r}}
         \end{bNiceMatrix}
     }_{\mathbf{B}}
-    \,\mathbf{u}
+    \;\mathbf{u}
     \\[2em]
     \mathbf{y}
     &=
@@ -272,18 +428,443 @@ Therefore, leading to the elaborate state-space description
                 & 0 & 0 & 0 & 0
         \end{bNiceMatrix}
     }_{\mathbf{C}}
-    \,\mathbf{x}.
+    \;\mathbf{x}.
 \end{aligned}
 \endgroup
 \end{equation}
 
+This model assumes that the
+\begin{itemize}
+    \item belts are non-elastic and do not slip,
+    \item motor parameters are equal for the left and right motor,
+    \item mass of the printer head rail, pulleys, and inertia of the pulleys can be neglected,
+    \item parameters $\mu_{l,x},\mu_{l,y}$ are total linear damping coefficients per direction,
+    \item parameter $\mu_r$ denotes the tangential damping per pulley.
+\end{itemize}
+
 \subsection{Decouple the x and y dynamics}
 
+\subsubsection{Decoupling equations}
+One can rewrite \Cref{eq:velocity} by choosing new velocity variables $\dot{x}=v_x,\dot{y}=v_y$. This results in 
+\begin{equation}
+\begin{aligned}
+    v_x &= \frac{r_m}{2} \left(\omega_l + \omega_r\right),
+    &\qquad
+    v_y &= \frac{r_m}{2} \left(\omega_l - \omega_r\right)\label{eq:speed}.
+\end{aligned}
+\end{equation}
+When \Cref{eq:rotational_speed_l,eq:rotational_speed_r} are added to each other, each side is multiplied with $\frac{r_m}{2}$ and \Cref{eq:speed} are substituted this leads to 
+\begin{align}
+    J_{\text{eff}}\dot{v}_x &= \frac{r_m K_m}{2}\underbrace{\left(i_{m,l}+i_{m,r}\right)}_{i_x}-\left(d_s+d_c\right)v_x.
+\end{align}
+Similarly, for the movement along the $y$-direction, one can write
+\begin{align}
+    J_{\text{eff}}\dot{v}_y &= \frac{r_m K_m}{2}\underbrace{\left(i_{m,l}-i_{m,r}\right)}_{i_y}-\left(d_s-d_c\right)v_y.
+\end{align}
+The electrical equations can be transformed similarly by adding \Cref{eq:motor_current} for the left and subtraction for the right motor
+\begin{align}
+    L_{m,l}\frac{d i_x}{dt} &= -R_m i_x - \frac{2K_m}{r_m}v_x + \underbrace{\left(u_{m,l}+u_{m,r}\right)}_{u_x},\\
+    L_{m,r}\frac{d i_y}{dt} &= -R_m i_y - \frac{2K_m}{r_m}v_y + \underbrace{\left(u_{m,l}-u_{m,r}\right)}_{u_y}.
+\end{align}
+
+\subsubsection{Transformed state-space model}
+In order to decouple the $x$ and $y$ coordinates two state-space models are presented.
+The two state vectors are chosen as
+\begin{equation}
+\begin{aligned}
+    \mathbf{x}_x &= \left[x ,\; v_x ,\; i_x\right]^{\mathsf{T}},
+    &\qquad
+    \mathbf{x}_y &= \left[y ,\; v_y ,\; i_y\right]^{\mathsf{T}}.
+\end{aligned}
+\end{equation}
+The inputs of the two models are represented by $u_x, u_y$.
+The position of the printer head is selected as $x, y$.
+Resulting in the transformed state-space representation
+\begin{figure}[htbp]
+    \centering
+    \begin{minipage}[t]{0.48\linewidth}
+        \vspace{0pt}
+        \centering
+        \textbf{\(x\)-direction}
+        \begin{NiceMatrixBlock}[auto-columns-width]
+        \begin{equation}
+        \begingroup
+        \setlength{\arraycolsep}{3pt}
+        \renewcommand{\arraystretch}{1.3}
+        \begin{aligned}
+            \dot{\mathbf{x}}_x
+            &=
+            \begin{bNiceMatrix}[columns-width=auto]
+                0 & 1 & 0 \\
+                0 & -\frac{d_s+d_c}{J_{\mathrm{eff}}}
+                  & \frac{r_m K_m}{2J_{\mathrm{eff}}} \\
+                0 & -\frac{2K_m}{r_m L_m}
+                  & -\frac{R_m}{L_m}
+            \end{bNiceMatrix}
+            \mathbf{x}_x+
+            \begin{bNiceMatrix}
+                0 \\ 0 \\ \frac{1}{L_m}
+            \end{bNiceMatrix}
+            u_x,
+            \\[1.5em]
+            x
+            &=
+            \begin{bNiceMatrix}[columns-width=auto]
+                1 & 0 & 0
+            \end{bNiceMatrix}
+            \mathbf{x}_x.
+        \end{aligned}
+        \endgroup
+        \label{eq:ss-x}
+        \end{equation}
+    \end{NiceMatrixBlock}
+    \end{minipage}
+    \hfill
+    \vrule width 0.4pt
+    \hfill
+    \begin{minipage}[t]{0.48\linewidth}
+        \vspace{0pt}
+        \centering
+        \textbf{\(y\)-direction}
+        \begin{NiceMatrixBlock}[auto-columns-width]
+        \begin{equation}
+        \begingroup
+        \setlength{\arraycolsep}{3pt}
+        \renewcommand{\arraystretch}{1.3}
+        \begin{aligned}
+            \dot{\mathbf{x}}_y
+            &=
+            \begin{bNiceMatrix}[columns-width=auto]
+                0 & 1 & 0 \\
+                0 & -\frac{d_s-d_c}{J_{\mathrm{eff}}}
+                  & \frac{r_m K_m}{2J_{\mathrm{eff}}} \\
+                0 & -\frac{2K_m}{r_m L_m}
+                  & -\frac{R_m}{L_m}
+            \end{bNiceMatrix}
+            \mathbf{x}_y+
+            \begin{bNiceMatrix}
+                0 \\ 0 \\ \frac{1}{L_m}
+            \end{bNiceMatrix}
+            u_y,
+            \\[1.5em]
+            y
+            &=
+            \begin{bNiceMatrix}[columns-width=auto]
+                1 & 0 & 0
+            \end{bNiceMatrix}
+            \mathbf{x}_y.
+        \end{aligned}
+        \endgroup
+        \label{eq:ss-y}
+        \end{equation}
+    \end{NiceMatrixBlock}
+    \end{minipage}
+\end{figure}
+
 \subsection{Drawing shapes}
+The corresponding motor voltages need to be determined in order to draw an ellipse with the 3D-printer. The $x$, and $y-$coordinates can be stated as
+\begin{equation}
+\begin{aligned}
+    x_{\text{ref}} &= x_c + a \cos{\left(\Omega t\right)},
+    &\qquad
+    y_{\text{ref}} &= y_c + b \sin{\left(\Omega t\right)}.\label{eq:ellipse}
+\end{aligned}
+\end{equation}
+Whereas $a,b \neq \SI{0}{\meter}$, $a \neq b$ and $\Omega=\frac{2\pi}{T}$. A circle is drawn when $a=b$.
+
+Using the decoupled state-space matrices (i.e., \Cref{eq:ss-x,eq:ss-y}), the motor voltages can be derived
+\begin{equation}
+\begin{array}{@{}c@{\quad}|@{\quad}c@{}}
+    \begin{aligned}
+        J_{\text{eff}}\ddot{x}_{\text{ref}} &= \frac{r_m K_m}{2}i_x-\left(d_s+d_c\right)\dot{x}_{\text{ref}}, \\[0.5em]
+        i_{x,\text{ref}} &= \frac{2}{r_m K_m}\left[J_{\text{eff}}\ddot{x}_{\text{ref}}+\left(d_s+d_c\right)\dot{x}_{\text{ref}}\right], \\[0.5em]
+        u_x &= L_m\frac{di_{x,\text{ref}}}{dt}+R_m i_{x,\text{ref}}+\frac{2K_m}{r_m}\dot{x}_{\text{ref}}.
+    \end{aligned}
+    &
+    \begin{aligned}
+        J_{\text{eff}}\ddot{y}_{\text{ref}} &= \frac{r_m K_m}{2}i_y-\left(d_s-d_c\right)\dot{y}_{\text{ref}},\\[0.5em]
+        i_{y,\text{ref}} &= \frac{2}{r_m K_m}\left[J_{\text{eff}}\ddot{y}_{\text{ref}}+\left(d_s-d_c\right)\dot{y}_{\text{ref}}\right], \\[0.5em]
+        u_y &= L_m\frac{di_{y,\text{ref}}}{dt}+R_m i_{y,\text{ref}}+\frac{2K_m}{r_m}\dot{y}_{\text{ref}}.
+    \end{aligned}
+\end{array}
+\end{equation}
+
+When $a=\SI{0.1}{\meter} $, $b=\SI{0.07}{\meter}$ and $T=10$ the model returns the following plot given in \Cref{fig:Ellipse}. 
+
+\begin{figure}[htbp]
+    \centering
+    \begin{minipage}[t]{0.48\linewidth}
+        \vspace{0pt}
+        \centering
+        \includegraphics[width=\linewidth]{Elipse.png}
+        \caption{The ellipse drawn for
+        $a=0.1$ and $b=0.07$.}
+        \label{fig:Ellipse}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[t]{0.48\linewidth}
+        \vspace{0pt}
+        \centering
+        \includegraphics[width=\linewidth]{Efteling_logo.png}
+        \caption{The Efteling logo. Drawn with $k=250$ in \Cref{eq:fourier_series}.}
+        \label{fig:Efteling}
+    \end{minipage}
+\end{figure}
+
+From \Cref{eq:ellipse} it can be observed that using geometric functions an arbitrary shape can be drawn. Using the complex Fourier series one can convert the contour of an image in a mathematical relation.
+The complex Fourier series and its relation to the printer head position is given by 
+\begin{equation}
+\begin{aligned}
+    z(t)&= \sum_k c_k e^{ik\Omega t},
+    &\qquad
+    x_{\text{ref}}(t) &= \operatorname{Re}\{z(t)\},
+    &\qquad
+    y_{\text{ref}}(t) &= \operatorname{Im}\{z(t)\}.\label{eq:fourier_series}
+\end{aligned}
+\end{equation}
+
+The website \cite{Fourier_pen} is used to obtain the coefficients $c_k$. When the coefficients from \cite{Efteling_logo_coordinates} are used, the 3D-printer draws \Cref{fig:Efteling}. 
 
 \subsection{Model the Nozzle}
+The lumped model of the nozzle is shown in \Cref{fig:Nozzle_schematic}.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\linewidth]{Nozzle_schematic.png}
+    \caption{The lumped model of the nozzle in the electrical and thermal domain.}
+    \label{fig:Nozzle_schematic}
+\end{figure}
+
+Assuming that all energy dissipated in $R_n$ is converted to heat and defining the voltage across $R_n$ as $v_n$, one can write 
+\begin{align}
+    P_{\text{heat}} &= v_n i_R = \frac{v_n^2}{R_n}.\label{eq:heat}
+\end{align}
+
+The thermal capacity determines the amount of energy needed to increase the temperature by 
+\begin{align}
+    C_{t,n}\dot{T}_n &= P_{\text{heat}} - \frac{T_n-T_e}{R_{t,n}}.
+\end{align}
+
+Substitution of \Cref{eq:heat} and solving for $\dot{T}_n$ leads to 
+\begin{align}
+    \dot{T}_n &= \frac{1}{C_{t,n}}\left[\frac{v_n^2}{R_n}-\frac{T_n-T_e}{R_{t,n}}\right].
+\end{align}
+
+Applying Kirchhoff's voltage and current laws leads to 
+\begin{align}
+    L_n\frac{di_L}{dt}    &= u_n-v_n,\\
+    C_n\dot{v}_n        &= i_L-\frac{v_n}{R_n}.
+\end{align}
+
+A suitable choice for the state vector is 
+\begin{align}
+    \mathbf{x}_n &= \left[T_n ,\; i_L ,\; v_n\right]^{\mathsf{T}}.
+\end{align}
+
+Transforming into the requested format (i.e, $\dot{\mathbf{x}}=f(\mathbf{x},\mathbf{u})$) yields 
+\begin{align}
+    \dfrac{d}{dt}
+    \begin{bNiceMatrix}[cell-space-limits=5pt]
+        T_n\\
+        i_L\\
+        v_n
+    \end{bNiceMatrix}
+    =
+    \begin{bNiceMatrix}[cell-space-limits=5pt]
+        \dfrac{1}{C_{t,n}}\left(\dfrac{v_n^2}{R_n}-\dfrac{T_n-T_e}{R_{t,n}}\right)\\
+        \dfrac{u_n-v_n}{L_n}\\
+        \dfrac{i_L-\dfrac{v_n}{R_n}}{C_n}
+    \end{bNiceMatrix}.
+\end{align}
 
 \subsection{Printing a circle of filament (PDE)}
+
+To aid in the derivation, \Cref{fig:filament-discretization} is created to define the conventions.
+
+\begin{figure}[H]
+    \centering
+    \resizebox{0.94\linewidth}{!}{%
+    \begin{tikzpicture}[
+        x={(1cm,0cm)},
+        y={(0.8cm,0.45cm)},
+        z={(0cm,1cm)},
+        >=Latex,
+        air/.style={
+            blue!75!cyan,
+            line width=1.4pt
+        },
+        contact/.style={
+            orange!90!black,
+            line width=2pt
+        },
+        edge/.style={
+            black!55,
+            thin
+        },
+        dimension/.style={
+            <->,
+            black,
+            thin
+        },
+        dimlabel/.style={
+            fill=white,
+            inner sep=2pt,
+            text=black
+        },
+        every node/.style={font=\small}
+    ]
+
+        % Front cross-section
+        \coordinate (A) at (0,0,0);
+        \coordinate (B) at (2,0,0);
+        \coordinate (C) at (2,0,2);
+        \coordinate (D) at (0,0,2);
+
+        % Rear cross-section
+        \coordinate (E) at (0,5,0);
+        \coordinate (F) at (2,5,0);
+        \coordinate (G) at (2,5,2);
+        \coordinate (H) at (0,5,2);
+
+        % Wide print bed:
+        % Change only these x-coordinates to adjust its width.
+        \fill[black!85]
+            (-2.5,-0.6,0) --
+            (4.5,-0.6,0) --
+            (4.5,5.6,0) --
+            (-2.5,5.6,0) -- cycle;
+
+        % Filament faces
+        \fill[red, fill opacity=0.12]
+            (A) -- (E) -- (H) -- (D) -- cycle;
+
+        \fill[red, fill opacity=0.18]
+            (B) -- (F) -- (G) -- (C) -- cycle;
+
+        \fill[red, fill opacity=0.15]
+            (D) -- (C) -- (G) -- (H) -- cycle;
+
+        \fill[red, fill opacity=0.20]
+            (A) -- (B) -- (C) -- (D) -- cycle;
+
+        % Filament edges
+        \draw[edge] (D) -- (H) -- (G) -- (C);
+        \draw[edge] (B) -- (F) -- (G);
+
+        % Numerical segment boundaries
+        \foreach \s in {1,2,3,4} {
+            \draw[black!60, densely dashed, thin]
+                (0,\s,2) -- (2,\s,2);
+
+            \draw[white!65!black, densely dashed, thin]
+                (2,\s,2) -- (2,\s,0);
+        }
+
+        % Local temperatures on the top face
+        \node at (1,0.5,2) {$T_1(t)$};
+        \node at (1,1.5,2) {$T_2(t)$};
+        \node at (1,2.5,2) {$\cdots$};
+        \node at (1,3.5,2) {$T_i(t)$};
+        \node at (1,4.5,2) {$\cdots$};
+
+        % Front cross-section boundaries
+        \draw[air] (A) -- (D) -- (C) -- (B);
+        \draw[contact] (A) -- (B);
+
+        % Cross-sectional area
+        \node[dimlabel] at (1,0,1) {$A=h^2$};
+
+        % Cross-section height
+        \draw[thin] (A) -- (-0.55,0,0);
+        \draw[thin] (D) -- (-0.55,0,2);
+        \draw[dimension]
+            (-0.4,0,0) -- (-0.4,0,2)
+            node[midway,left,dimlabel] {$h$};
+
+        % Total deposited length
+        \draw[thin] (D) -- (0,0,2.65);
+        \draw[thin] (H) -- (0,5,2.65);
+        \draw[dimension]
+            (0,0,2.5) -- (0,5,2.5)
+            node[midway,above,sloped,dimlabel] {$\ell(t)$};
+
+        % Length of one numerical segment
+        \draw[white!80, thin]
+            (2,2,0) -- (2.8,2,0);
+        \draw[white!80, thin]
+            (2,3,0) -- (2.8,3,0);
+        \draw[<->, white, thin]
+            (2.65,2,0) -- (2.65,3,0)
+            node[midway,below,sloped,dimlabel] {$\Delta s$};
+
+        % Air boundary label
+        \node[
+            text=blue!75!cyan,
+            anchor=east,
+            align=right
+        ] (airlabel) at (-0.9,0,2.65)
+            {Air\\$T_e,\ \alpha_{\mathrm{air}}$};
+
+        \draw[->, blue!75!cyan]
+            (airlabel.east) -- ($(D)!0.4!(C)$);
+
+        % Bed-contact label outside the bed
+        \node[
+            text=orange!90!black,
+            anchor=north,
+            align=center
+        ] (contactlabel) at (1,-1.15,0)
+            {Bed contact\\$\alpha_{\mathrm{bed}}$};
+
+        \draw[->, orange!90!black]
+            (contactlabel.north) -- ($(A)!0.5!(B)$);
+
+        % Clearly visible bed-temperature label
+        \node[
+            text=white,
+            align=center
+        ] at (3.5,3.5,0)
+            {Print bed\\$T_b$};
+
+    \end{tikzpicture}%
+    }
+    \caption{Spatial discretization of the deposited filament.
+    Blue boundaries exchange heat with the air, while the orange
+    boundary exchanges heat with the print bed.}
+    \label{fig:filament-discretization}
+\end{figure}
+
+For a distance along the printed path, it can be defined 
+\begin{equation}
+\begin{aligned}
+    0&\leq s \leq \ell(t),
+    &\qquad
+    \dot{\ell}(t) &= v_{\text{print}}(t).
+\end{aligned}
+\end{equation}
+
+The printing speed is given by 
+\begin{equation}
+    v_{\text{print}} = \sqrt{\dot{x}^2+\dot{y}^2}.
+\end{equation}
+
+The cross-sectional area between two pieces of filament is given by $A=h^2$. The boundary between the air and the filament are given by $p_{\text{air}}=3h$. The print bed and the filament are in contact $p_{\text{bed}}=h$.
+
+The Partial Differential Equation (PDE) for the heat transfer can be modelled as 
+\begin{align}
+    \underbrace{\rho c_p A \frac{\partial T(s,t)}{\partial t}}_{\text{Storage}} &= \underbrace{\lambda h^2 \frac{\partial^2 T(s,t)}{\partial s^2}}_{\text{Conduction}}-\underbrace{\alpha_{\text{air}}3h\left(T(s,t)-T_e\right)}_{\text{Convection}}+\underbrace{\alpha_{\text{bed}}h\left(T_b-T(s,t)\right)}_{\text{Heated bed}}.
+\end{align}
+
+The initial value condition can be found by defining $t_d(s)$ which indicates the time when the filament at position $s$ is printed. At that time and position, the temperature of the filament is equal to the nozzle temperature $T(s,t_d(s))=T_n$.
+
+The printing temperature of the nozzle is $T_n=\SI{240}{\degreeCelsius}$. A suitable choice for filament is ABS as this temperature falls in the generic print temperature \cite{santos2023insights}.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.8\linewidth]{table_ABS_parameters.png}
+    \caption{The ABS material properties as presented in \cite{santos2023insights}. These values are treated as generic parameters for ABS filament and discrepancies between different colors may be present.}
+    \label{fig:table_ABS_parameters}
+\end{figure}
+
 
 \section{Finite State Machine}
 
@@ -297,4 +878,6 @@ Therefore, leading to the elaborate state-space description
 
 \subsection{Draw a square}
 
+\par\noindent\rule{\textwidth}{0.4pt}
+\printbibliography
 \end{document}

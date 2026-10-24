@@ -19,6 +19,7 @@
 %------------------------
 \usepackage{amsmath,mathtools}
 \usepackage{siunitx}
+\usepackage{physics}
 \sisetup{
     per-mode = symbol,
     exponent-product = \cdot,
@@ -38,6 +39,7 @@
 \usepackage{subcaption}   % Vervangt subfig
 \usepackage{pgfplots}
 \usepackage{matlab-prettifier}
+\usepackage{minted}
 \usepgfplotslibrary{polar}
 \pgfplotsset{compat=1.18}
 
@@ -45,13 +47,15 @@
 % TikZ & elektrische schema's
 %------------------------
 \usepackage[european,american voltages]{circuitikz}
+\usepackage{tikz}
 \usetikzlibrary{
   arrows.meta,
   positioning,
   shapes.geometric,
   patterns,
   backgrounds,
-  scopes
+  scopes,
+  calc
 }
 
 %------------------------
@@ -106,7 +110,46 @@
 %------------------------
 % Verwijzingen & hyperlinks (volgorde: eerst hyperref, dan cleveref)
 %------------------------
-\usepackage[hidelinks]{hyperref}
+\usepackage{hyperref}
+\definecolor{linkgray}{gray}{0.35}
+\definecolor{Darkgray}{gray}{0.25}
+
+% Interne verwijzingen: zwart, zonder onderstreping
+\hypersetup{
+    colorlinks=true,
+    linkcolor=black,
+    citecolor=black,
+    urlcolor=linkgray,
+    pdfborder={0 0 0},
+    pdfborderstyle={}
+}
+
+% Onderstreping uitsluitend voor URL-links
+\newcommand{\urlunderline}{%
+    \hypersetup{
+        pdfborder={0 0 1},
+        pdfborderstyle={/S/U/W 1},
+        urlbordercolor=linkgray
+    }%
+}
+
+\let\originalhref\href
+\renewcommand{\href}[2]{%
+    \begingroup
+    \urlunderline
+    \originalhref{#1}{#2}%
+    \endgroup
+}
+
+\let\originalurl\url
+\renewcommand{\url}[1]{%
+    \begingroup
+    \urlunderline
+    \originalurl{#1}%
+    \endgroup
+}
+
+% Na hyperref laden:
 \usepackage[noabbrev,nameinlink]{cleveref}
 
 \usepackage{attachfile2}
@@ -127,6 +170,7 @@
 \fancyhf{}
 \lhead{\leftmark}
 \rhead{\thepage}
+\definecolor{LightGray}{gray}{0.9}
 
 %------------------------
 % Bibliografie (IEEE-stijl, biber-backend)
@@ -143,7 +187,6 @@
 % Caption-breedte en centrering
 %------------------------
 \usepackage[justification=centering]{caption}
-\captionsetup{width=0.95\linewidth}
 
 %------------------------
 % Handige eigen omgevingen/lijsten
@@ -182,6 +225,14 @@
 \setlength{\cftsubsecnumwidth}{2.25cm}
 
 \renewcommand{\thesubsection}{Question \arabic{subsection}}
+
+% Subsubsections: nummering zonder "Question"
+\renewcommand{\thesubsubsection}{%
+    \arabic{subsection}.\arabic{subsubsection}%
+}
+
+% Ruimte voor het nummer in de inhoudsopgave
+\setlength{\cftsubsubsecnumwidth}{1cm}
 
 \titleformat{\subsection}
 {\normalfont\large\bfseries}
