@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.colors import PowerNorm
 from matplotlib.animation import FuncAnimation, PillowWriter
 from pathlib import Path
 import sys
@@ -126,9 +127,17 @@ frame_times = np.unique(np.r_[
 ])
 fig, ax = plt.subplots(figsize=(7, 6), constrained_layout=True)
 ax.plot(x_geometry, y_geometry, color='0.85', linewidth=1, zorder=0)
+# Fixed nonlinear colour scale: expand differences near thermal equilibrium.
+# Only the display changes; all simulated temperatures remain unchanged.
+temperature_norm = PowerNorm(
+    gamma=1,
+    vmin=T_equilibrium - C_to_Kelvin,
+    vmax=Tn - C_to_Kelvin,
+    clip=True,
+)
 points = ax.scatter(
     [], [], c=np.empty(0), cmap='inferno',
-    vmin=Te - C_to_Kelvin, vmax=Tn - C_to_Kelvin, s=14,
+    norm=temperature_norm, s=14,
 )
 nozzle, = ax.plot([], [], 'o', color='deepskyblue',
                   markeredgecolor='black', markersize=7, label='Nozzle')
@@ -139,7 +148,8 @@ ax.set(xlabel='x position [m]', ylabel='y position [m]',
 ax.set_aspect('equal')
 ax.grid(True)
 ax.legend(loc='lower right')
-fig.colorbar(points, ax=ax, label='Temperature [deg C]')
+fig.colorbar(points, ax=ax,
+             label='Temperature [deg C] (nonlinear colour scale)')
 
 
 def update_animation(display_time):
@@ -205,6 +215,16 @@ ax_ends.plot(time, T_history[:, -1] - C_to_Kelvin,
              label='Last segment', color='tab:orange')
 ax_ends.axvline(printing_time, color='black', linestyle='--',
                 label='Ring closure')
+equilibrium_celsius = T_equilibrium - C_to_Kelvin
+ax_ends.axhline(equilibrium_celsius, color='tab:red', linestyle=':',
+                linewidth=1.5, label='_nolegend_', zorder=4)
+ax_ends.annotate(
+    rf'$T_\infty = {equilibrium_celsius:.2f}\,^\circ\mathrm{{C}}$',
+    xy=(0.03, equilibrium_celsius), xycoords=('axes fraction', 'data'),
+    xytext=(0, 7), textcoords='offset points',
+    color='tab:red', ha='left', va='bottom',
+    bbox=dict(facecolor='white', edgecolor='none', alpha=0.85, pad=2),
+)
 # Make the last segment's initial value visible at its deposition instant.
 ax_ends.scatter([printing_time], [Tn - C_to_Kelvin],
                 color='tab:orange', s=25, zorder=3)

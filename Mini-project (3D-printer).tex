@@ -727,9 +727,8 @@ To aid in the derivation, \Cref{fig:filament-discretization} is created to defin
         \coordinate (G) at (2,5,2);
         \coordinate (H) at (0,5,2);
 
-        % Wide print bed:
-        % Change only these x-coordinates to adjust its width.
-        \fill[black!85]
+        % Schematic portion of a larger print bed
+        \fill[black!75]
             (-2.5,-0.6,0) --
             (4.5,-0.6,0) --
             (4.5,5.6,0) --
@@ -859,11 +858,10 @@ The Partial Differential Equation (PDE) for the heat transfer can be modelled as
 
 The initial value condition can be found by defining $t_d(s)$ which indicates the time when the filament at position $s$ is printed. At that time and position, the temperature of the filament is equal to the nozzle temperature $T(s,t_d(s))=T_n$.
 
-The printing temperature of the nozzle is $T_n=\SI{240}{\degreeCelsius}$. A suitable choice for filament is ABS as this temperature falls in the generic print temperature \cite{santos2023insights}.
-
+The printing temperature of the nozzle is $T_n=\SI{240}{\degreeCelsius}$. A suitable choice for filament is ABS as this temperature falls in the generic print temperature \cite{santos2023insights}. The material parameters of \cite{santos2023insights} are used in the PDE evaluation. The effective heat contact coefficient $\alpha_{\text{bed}}$ is selected as \SI{50}{\watt\per\meter\squared\per\kelvin} which is found to be adequate to illustrate the progression of the PDE versus time.
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.8\linewidth]{table_ABS_parameters.png}
+    \includegraphics[width=0.9\linewidth]{table_ABS_parameters.png}
     \caption{The ABS material properties as presented in \cite{santos2023insights}. These values are treated as generic parameters for ABS filament and discrepancies between different colors may be present.}
     \label{fig:table_ABS_parameters}
 \end{figure}
@@ -873,21 +871,266 @@ In order to evaluate \Cref{eq:PDE} one can use the Method of Lines (MOL) in orde
     \frac{dT_i}{dt} \approx \underbrace{\frac{\lambda}{\rho C_p}}_{a_{\text{th}}}\frac{T_{i+1}-2T_i+T_{i-1}}{\Delta s^2}-\underbrace{\frac{3\alpha_{\text{air}}}{\rho C_p h}}_{\beta_{\text{air}}} \left(T_i-T_e\right)+\underbrace{\frac{\alpha_{\text{bed}}}{\rho C_p h}}_{\beta_{\text{bed}}} \left(T_b-T_i\right).
 \end{align}
 
-\begin{figure}[htbp]
+The PDE is numerically evaluated using Python. The $x$ and $y$-coordinates as a function of time and temperature of the filament are presented in the animation of \Cref{fig:Filament}.
+
+\begin{figure}[H]
     \centering
     \animategraphics[
         controls,
         loop,
         width=0.8\linewidth
     ]{1.5}{frames/frame-}{000}{29}
-    \caption{Printing and cooling of the filament.}
+    \caption{Printing and cooling of the filament. Open in Acrobat Reader in order to start the animation.}
+    \label{fig:Filament}
+\end{figure}
+
+As time progresses, the temperature of the filament reaches a stationary value of
+\begin{align}
+    T_{\infty} &= \frac{3\alpha_{\text{air}}T_e+\alpha_{\text{bed}}T_b}{3\alpha_{\text{air}}+\alpha_{\text{bed}}} = \frac{3\cdot 25\cdot 300 + 50 \cdot 378.15}{3\cdot25+50} = \SI{331.26}{\kelvin} = \SI{58.11}{\degreeCelsius}.\label{eq:temperature_infty}
+\end{align}
+
+In \Cref{fig:first_last_filament} the temperature versus time graph of the first and last segment are presented. When the ellipse closes, the first and last segment come into contact. The last element initially heats up the first segment after which the temperature of both segments approach the stationary value calculated in \Cref{eq:temperature_infty}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{first_last_filament.png}
+    \caption{Temperature of the first and last segment of the printed ellipse. When the ring is closed, the first element heats up due to the thermal conductivity of the filament.}
+    \label{fig:first_last_filament}
 \end{figure}
 
 \section{Finite State Machine}
 
 \subsection{Finite State Machines — Filament replacement}
+The Finite State Machine (FSM) is presented in \Cref{fig:filament-fsm}. The definitions of the states are given in \Cref{tab:fsm-states}. The meaning of the events are summarized in \Cref{tab:fsm-events}.
+
+\begin{figure}[H]
+    \centering
+    \begin{tikzpicture}[
+        scale=1.1,
+        transform shape,
+        node distance=18mm and 27mm,
+        every state/.append style={
+            circle,
+            semithick,
+            fill=gray!10,
+            minimum size=12mm,
+            font=\small
+        },
+        initial text={},
+        initial distance=7mm,
+        every edge/.append style={
+            draw,
+            ->,
+            >=Stealth,
+            semithick
+        }
+    ]
+        % States
+        \node[state,initial] (print) {$q_0$};
+        \node[state,right=of print] (move) {$q_1$};
+        \node[state,right=of move] (wipe) {$q_2$};
+        \node[state,below=of wipe] (load) {$q_3$};
+        \node[state,left=of load] (heat) {$q_4$};
+        \node[state,left=of heat] (return) {$q_5$};
+
+        % Transitions
+        \path
+            (print) edge
+                node[above, align=center, font=\small] {
+                    $C\lor F$\\
+                    $(x_s,y_s)\leftarrow(x,y)$\\
+                    $e_{\mathrm{replace}}$
+                }
+                (move)
+            (move) edge node[above] {$e_{\mathrm{park}}$} (wipe)
+            (wipe) edge node[right] {$e_{\mathrm{wipe}}$} (load)
+            (load) edge node[below] {$e_{\mathrm{load}}$} (heat)
+            (heat) edge node[below] {$e_{\mathrm{hot}}$} (return)
+            (return) edge node[left] {$e_{\mathrm{return}}$} (print);
+
+    \end{tikzpicture}
+    \caption{Finite state machine for filament replacement.
+    The initial state is $q_0$.}
+    \label{fig:filament-fsm}
+\end{figure}
+
+\begin{figure}[H]
+    \begin{minipage}{0.43\linewidth}
+        \vspace{0pt}
+        \centering
+        \captionsetup{width=\linewidth,font=small}
+        \captionof{table}{Controller states.}
+        \label{tab:fsm-states}
+
+        \small
+        \renewcommand{\arraystretch}{1.2}
+        \begin{tabularx}{\linewidth}{
+            @{}c >{\raggedright\arraybackslash}X@{}
+        }
+            \toprule
+            \textbf{State} & \textbf{Description} \\
+            \midrule
+            $q_0$ & Printing \\
+            $q_1$ & Moving to the wipe tower \\
+            $q_2$ & Wiping excess filament \\
+            $q_3$ & Loading new filament; heater off \\
+            $q_4$ & Heating the nozzle \\
+            $q_5$ & Returning to the saved print position \\
+            \bottomrule
+        \end{tabularx}
+    \end{minipage}
+    \hfill
+    % State descriptions
+        \begin{minipage}{0.55\linewidth}
+        \vspace{0pt}
+        \centering
+        \captionsetup{width=\linewidth,font=small}
+        \captionof{table}{Controller events.}
+        \label{tab:fsm-events}
+
+        \small
+        \renewcommand{\arraystretch}{1.2}
+        \begin{tabularx}{\linewidth}{
+            @{}c >{\raggedright\arraybackslash}X@{}
+        }
+            \toprule
+            \textbf{Event} & \textbf{Description} \\
+            \midrule
+            $e_{\text{replace}}$ & The filament needs to be changed $(C\lor F$), nozzle is turned off, position is saved \\
+            $e_{\text{park}}$ & The printer head has reached the wipe tower \\
+            $e_{\text{wipe}}$ & The nozzle has been wiped \\
+            $e_{\text{load}}$ & New filament is loaded into the nozzle \\
+            $e_{\text{hot}}$ & Nozzle has reached the desired temperature \\
+            $e_{\text{return}}$ & Printer head has reached the saved position \\
+            \bottomrule
+        \end{tabularx}
+    \end{minipage}
+\end{figure}
+
+State $q_0$ is selected as the initial state. This state denotes the printing stage and there is no need for a new color to be printed nor a finished spool. When $C$ or $F$ are activated, the current location of the printer head is stored in the variables $(x_s,y_s)$ and the extrusion of the filament is halted. The state becomes $q_1$ which indicates the process of the printer head moving to the wipe tower. When the printer head reaches the wipe tower event $e_{\text{park}}$ has occurred. In state $q_2$, the excess filament coming from the nozzle is wiped off. The heating of the nozzle is switched off and becomes ready for the loading of new filament as given by $q_3$. Event $e_{\text{load}}$ denotes that new filament is loaded into the nozzle and the nozzle can be heated again. When the nozzle heats up to the required temperature, the system enters state $q_5$ which returns the nozzle to the print position as saved in $(x_s,y_s)$ and the system has reached the initial state again. There is no accepting state as the 3D-printer continues this cycle until it is turned off.
 
 \subsection{Automata — Parked detection}
+
+The automaton for the parked detection is given in \Cref{fig:parked-automaton}.
+
+\begin{figure}[htbp]
+    \centering
+    \begin{tikzpicture}[
+        node distance=25mm and 35mm,
+        every state/.append style={
+            circle,
+            semithick,
+            fill=gray!10,
+            minimum size=14mm,
+            font=\small
+        },
+        initial text={},
+        initial distance=7mm,
+        accepting/.append style={
+            double=gray!10,
+            double distance=2pt
+        },
+        every edge/.append style={
+            draw,
+            ->,
+            >=Stealth,
+            semithick
+        },
+        every node/.style={font=\small}
+    ]
+        % States
+        \node[state,initial] (none) {$q_{\varnothing}$};
+        \node[state,right=of none] (horizontal) {$q_H$};
+        \node[state,below=of none] (vertical) {$q_V$};
+        \node[state,accepting,right=of vertical] (parked) {$q_{HV}$};
+
+        % End-position confirmations
+        \path
+            (none) edge
+                node[above] {$(H,0)$} (horizontal)
+            (none) edge
+                node[left] {$(V,0)$} (vertical)
+            (horizontal) edge
+                node[right] {$(V,0)$} (parked)
+            (vertical) edge
+                node[below] {$(H,0)$} (parked);
+
+        % Events that do not change the stored confirmations
+        \path
+            (none) edge[loop above]
+                node[align=center]
+                {$(H,+)$\\$(V,+)$} (none)
+            (horizontal) edge[loop above]
+                node[align=center]
+                {$(H,+),\ (H,0)$\\$(V,+)$} (horizontal)
+            (vertical) edge[loop left]
+                node[align=center]
+                {$(V,+),\ (V,0)$\\$(H,+)$} (vertical)
+            (parked) edge[loop right]
+                node {$\Sigma$} (parked);
+
+    \end{tikzpicture}
+    \caption{Automaton for detecting the bottom-left parking position.
+    The accepting state $q_{HV}$ indicates that both end positions
+    have been confirmed.}
+    \label{fig:parked-automaton}
+\end{figure}
+
+The alphabet corresponding to the automaton is defined as 
+\begin{align}
+    \Sigma  &= \{(H,+),(H,0),(V,+),(V,0)\}.
+\end{align}
+
+\begin{figure}[H]
+    \begin{minipage}{0.43\linewidth}
+        \vspace{0pt}
+        \centering
+        \captionsetup{width=\linewidth,font=small}
+        \captionof{table}{Automaton states.}
+        
+        \label{tab:automaton-states}
+        \small
+        \renewcommand{\arraystretch}{1.2}
+        \begin{tabularx}{\linewidth}{
+            @{}c >{\raggedright\arraybackslash}X@{}
+        }
+            \toprule
+            \textbf{State} & \textbf{Description} \\
+            \midrule
+            $q_{\varnothing}$ & Printer head has not reached a boundary\\
+            $q_H$ & Printer head has reached the left boundary \\
+            $q_V$ & Printer head has reached the bottom boundary \\
+            $q_{HV}$ & Printer head has reached the origin. \\
+            \bottomrule
+        \end{tabularx}
+    \end{minipage}
+    \hfill
+    % State descriptions
+        \begin{minipage}{0.55\linewidth}
+        \vspace{0pt}
+        \centering
+        \captionsetup{width=\linewidth,font=small}
+        \captionof{table}{Controller events.}
+        \label{tab:fsm-events}
+
+        \small
+        \renewcommand{\arraystretch}{1.2}
+        \begin{tabularx}{\linewidth}{
+            @{}c >{\raggedright\arraybackslash}X@{}
+        }
+            \toprule
+            \textbf{Event} & \textbf{Description} \\
+            \midrule
+            $e_{\text{replace}}$ & The filament needs to be changed $(C\lor F$), nozzle is turned off, position is saved \\
+            $e_{\text{park}}$ & The printer head has reached the wipe tower \\
+            $e_{\text{wipe}}$ & The nozzle has been wiped \\
+            $e_{\text{load}}$ & New filament is loaded into the nozzle \\
+            $e_{\text{hot}}$ & Nozzle has reached the desired temperature \\
+            $e_{\text{return}}$ & Printer head has reached the saved position \\
+            \bottomrule
+        \end{tabularx}
+    \end{minipage}
+\end{figure}
 
 \section{Hybrid system}
 
