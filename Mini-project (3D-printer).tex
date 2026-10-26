@@ -889,7 +889,7 @@ As time progresses, the temperature of the filament reaches a stationary value o
     T_{\infty} &= \frac{3\alpha_{\text{air}}T_e+\alpha_{\text{bed}}T_b}{3\alpha_{\text{air}}+\alpha_{\text{bed}}} = \frac{3\cdot 25\cdot 300 + 50 \cdot 378.15}{3\cdot25+50} = \SI{331.26}{\kelvin} = \SI{58.11}{\degreeCelsius}.\label{eq:temperature_infty}
 \end{align}
 
-In \Cref{fig:first_last_filament} the temperature versus time graph of the first and last segment are presented. When the ellipse closes, the first and last segment come into contact. The last element initially heats up the first segment after which the temperature of both segments approach the stationary value calculated in \Cref{eq:temperature_infty}.
+In \Cref{fig:first_last_filament} the temperature versus time graph of the first and last segment are presented. When the ellipse closes, the first and last segment come into contact. The last element initially heats up the first segment after which the temperature of both segments cools down to the stationary value calculated in \Cref{eq:temperature_infty}.
 
 \begin{figure}[H]
     \centering
@@ -1014,80 +1014,77 @@ State $q_0$ is selected as the initial state. This state denotes the printing st
 The automaton for the parked detection is given in \Cref{fig:parked-automaton}.
 
 \begin{figure}[htbp]
-    \centering
-    \begin{tikzpicture}[
-        node distance=25mm and 35mm,
-        every state/.append style={
-            circle,
-            semithick,
-            fill=gray!10,
-            minimum size=14mm,
-            font=\small
-        },
-        initial text={},
-        initial distance=7mm,
-        accepting/.append style={
-            double=gray!10,
-            double distance=2pt
-        },
-        every edge/.append style={
-            draw,
-            ->,
-            >=Stealth,
-            semithick
-        },
-        every node/.style={font=\small}
-    ]
-        % States
-        \node[state,initial] (none) {$q_{\varnothing}$};
-        \node[state,right=of none] (horizontal) {$q_H$};
-        \node[state,below=of none] (vertical) {$q_V$};
-        \node[state,accepting,right=of vertical] (parked) {$q_{HV}$};
+    \begin{minipage}{0.45\linewidth}
+        \centering
+        \begin{tikzpicture}[
+            scale=0.9,
+            transform shape,
+            node distance=25mm and 35mm,
+            every state/.append style={
+                circle,
+                semithick,
+                fill=gray!10,
+                minimum size=14mm,
+                font=\small
+            },
+            initial text={},
+            initial distance=7mm,
+            accepting/.append style={
+                double=gray!10,
+                double distance=2pt
+            },
+            every edge/.append style={
+                draw,
+                ->,
+                >=Stealth,
+                semithick
+            },
+            every node/.style={font=\small}
+        ]
+            % States
+            \node[state,initial] (none) {$q_{\varnothing}$};
+            \node[state,right=of none] (horizontal) {$q_H$};
+            \node[state,below=of none] (vertical) {$q_V$};
+            \node[state,accepting,right=of vertical] (parked) {$q_{HV}$};
 
-        % End-position confirmations
-        \path
-            (none) edge
-                node[above] {$(H,0)$} (horizontal)
-            (none) edge
-                node[left] {$(V,0)$} (vertical)
-            (horizontal) edge
-                node[right] {$(V,0)$} (parked)
-            (vertical) edge
-                node[below] {$(H,0)$} (parked);
+            % End-position confirmations
+            \path
+                (none) edge
+                    node[above] {$(H,0)$} (horizontal)
+                (none) edge
+                    node[left] {$(V,0)$} (vertical)
+                (horizontal) edge
+                    node[right] {$(V,0)$} (parked)
+                (vertical) edge
+                    node[below] {$(H,0)$} (parked);
 
-        % Events that do not change the stored confirmations
-        \path
-            (none) edge[loop above]
-                node[align=center]
-                {$(H,+)$\\$(V,+)$} (none)
-            (horizontal) edge[loop above]
-                node[align=center]
-                {$(H,+),\ (H,0)$\\$(V,+)$} (horizontal)
-            (vertical) edge[loop left]
-                node[align=center]
-                {$(V,+),\ (V,0)$\\$(H,+)$} (vertical)
-            (parked) edge[loop right]
-                node {$\Sigma$} (parked);
+            % Events that do not change the stored confirmations
+            \path
+                (none) edge[loop above]
+                    node[align=center]
+                    {$(H,+)$\\$(V,+)$} (none)
+                (horizontal) edge[loop above]
+                    node[align=center]
+                    {$(H,+),\ (H,0)$\\$(V,+)$} (horizontal)
+                (vertical) edge[loop below]
+                    node[align=center]
+                    {$(V,+),\ (V,0)$\\$(H,+)$} (vertical)
+                (parked) edge[loop below]
+                    node {$\Sigma$} (parked);
 
-    \end{tikzpicture}
-    \caption{Automaton for detecting the bottom-left parking position.
-    The accepting state $q_{HV}$ indicates that both end positions
-    have been confirmed.}
-    \label{fig:parked-automaton}
-\end{figure}
-
-The alphabet corresponding to the automaton is defined as 
-\begin{align}
-    \Sigma  &= \{(H,+),(H,0),(V,+),(V,0)\}.
-\end{align}
-
-\begin{figure}[H]
-    \begin{minipage}{0.43\linewidth}
+        \end{tikzpicture}
+        \caption{Automaton for detecting the bottom-left parking position.
+        The accepting state $q_{HV}$ indicates that both end positions
+        have been reached.}
+        \label{fig:parked-automaton}
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.4\linewidth}
         \vspace{0pt}
         \centering
         \captionsetup{width=\linewidth,font=small}
         \captionof{table}{Automaton states.}
-        
+
         \label{tab:automaton-states}
         \small
         \renewcommand{\arraystretch}{1.2}
@@ -1104,39 +1101,44 @@ The alphabet corresponding to the automaton is defined as
             \bottomrule
         \end{tabularx}
     \end{minipage}
-    \hfill
-    % State descriptions
-        \begin{minipage}{0.55\linewidth}
-        \vspace{0pt}
-        \centering
-        \captionsetup{width=\linewidth,font=small}
-        \captionof{table}{Controller events.}
-        \label{tab:fsm-events}
-
-        \small
-        \renewcommand{\arraystretch}{1.2}
-        \begin{tabularx}{\linewidth}{
-            @{}c >{\raggedright\arraybackslash}X@{}
-        }
-            \toprule
-            \textbf{Event} & \textbf{Description} \\
-            \midrule
-            $e_{\text{replace}}$ & The filament needs to be changed $(C\lor F$), nozzle is turned off, position is saved \\
-            $e_{\text{park}}$ & The printer head has reached the wipe tower \\
-            $e_{\text{wipe}}$ & The nozzle has been wiped \\
-            $e_{\text{load}}$ & New filament is loaded into the nozzle \\
-            $e_{\text{hot}}$ & Nozzle has reached the desired temperature \\
-            $e_{\text{return}}$ & Printer head has reached the saved position \\
-            \bottomrule
-        \end{tabularx}
-    \end{minipage}
 \end{figure}
+
+The parking detector is defined by
+\begin{align}
+\mathcal{A}&=(Q,\Sigma,\delta,q_{\varnothing},F_{\mathrm{acc}}),
+\end{align}
+where
+\begin{equation}
+\begin{aligned}
+    Q&=\{q_{\varnothing},q_H,q_V,q_{HV}\},
+    &\qquad
+    \Sigma  &= \{(H,+),(H,0),(V,+),(V,0)\},
+    &\qquad
+    F_{\mathrm{acc}}&=\{q_{HV}\}.
+\end{aligned}
+\end{equation}
 
 \section{Hybrid system}
 
 \subsection{Filament replacement}
+The total system state vector is defined as
+\begin{align}
+    \mathbf{z} &= \left[x \;, v_x \;, i_x \;, y \;, v_y \;, i_y \;, T_n \;, i_L \;, v_n\right]^{\mathsf{T}}.
+\end{align}
 
 \subsection{Draw a square}
+
+\begin{figure}[htbp]
+    \centering
+    \animategraphics[
+        controls,
+        loop,
+        poster=last,
+        width=\linewidth
+    ]{3}{frames_Q3_1/frame-}{000}{119}
+    \caption{Simulation of the hybrid 3D-printer model. Open in Acrobat Reader in order to start the animation.}
+    \label{fig:hybrid-animation}
+\end{figure}
 
 \par\noindent\rule{\textwidth}{0.4pt}
 \printbibliography
