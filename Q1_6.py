@@ -12,7 +12,7 @@ def x_position(t):
 
 
 def y_position(t):
-    return y_c - b * np.sin(Omega * t)
+    return y_c + b * np.sin(Omega * t)
 
 # Material properties and heat-transfer coefficients in SI units
 C_to_Kelvin = 273.15
