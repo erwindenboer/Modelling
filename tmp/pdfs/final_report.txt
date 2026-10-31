@@ -1,0 +1,1015 @@
+===== PAGE 1 =====
+Modelling of Dynamical Systems
+3D printer
+Erwin den Boer (5513324)
+Group 61
+October 31, 2026
+1
+
+===== PAGE 2 =====
+Contents
+Introduction 2
+1 Physical Modelling 5
+Question 1 Kinematics 5
+Question 2 Dynamics 5
+2.1 Electrical dynamics 6
+2.2 Mechanical dynamics 6
+2.3 State-space model 8
+Question 3 Decouple the x and y dynamics 9
+3.1 Decoupling equations 9
+3.2 Transformed state-space model 9
+Question 4 Drawing shapes 10
+Question 5 Model the Nozzle 11
+Question 6 Printing a circle of filament (PDE) 12
+2 Finite State Machine 14
+Question 1 Finite State Machines — Filament replacement 14
+Question 2 Automata — Parked detection 15
+3 Hybrid system 16
+Question 1 Filament replacement 16
+1.1 Model 16
+1.2 Numerical parameters 17
+1.3 Guards 17
+1.4 Reset 18
+1.5 Invariants 18
+1.6 Simulation settings 18
+Question 2 Draw a square 18
+Introduction
+The mini-project involves the modelling of a 3D-printer in three domains: physical, discrete,
+and hybrid.
+2
+
+===== PAGE 3 =====
+CONTENTS 3
+Figure 1: The schematic view of the 3D-printer.
+In Figure 1 the schematic overview with the associated variable names and orientations is
+shown. The orientation and names of the corresponding physical quantity are respected
+in the derivation of the models. The mandatory variable names are given in Table 1. The
+formulas contain auxiliary variables which may not be given in this table.
+
+===== PAGE 4 =====
+CONTENTS 4
+Table 1: Variables and parameters of the 3D-printer.
+Name Symbol Value Unit
+Motors and print head
+Motor angle left𝜃 𝑙 rad
+Motor voltage left𝑢 𝑚,𝑙 V
+Motor current left𝑖 𝑚,𝑙 A
+Motor radius𝑟 𝑚 11 mm
+Motor inductance𝐿 𝑚 10 mH
+Motor resistance𝑅 𝑚 90 Ω
+Motor inertia𝐽 𝑚 8·10 −6 —
+Motor constant𝐾 𝑚 0.07 N m/A
+Tool head position𝑥, 𝑦m
+Tool head mass𝑚60 g
+Nozzle and thermal parameters
+Nozzle voltage𝑢 𝑛 V
+Nozzle current𝑖 𝑛 A
+Nozzle capacitance𝐶 𝑛 F
+Nozzle thermal capacity𝐶 𝑡,𝑛 J/K
+Nozzle thermal resistance𝑅 𝑡,𝑛 9 K/W
+Nozzle resistance𝑅 𝑛 8 Ω
+Nozzle temperature𝑇 𝑛 240 ◦ C
+Environmental temperature𝑇 𝑒 300 K
+Bearing friction
+Rolling bearing friction𝜇 𝑟 0.003 N s/m
+Linear bearing friction,𝑥-direction𝜇 𝑙,𝑥 0.002 N s/m
+Linear bearing friction,𝑦-direction𝜇 𝑙, 𝑦 0.001 N s/m
+Print bed and geometry
+Print bed temperature𝑇 𝑏 105 ◦ C
+Print area dimension,𝑥-direction𝑑 𝑥 29 cm
+Print area dimension,𝑦-direction𝑑 𝑦 29 cm
+Right motor variables are analogous to those of the left motor. Empty value cells indicate variables or
+unspecified parameters. The unit of motor inertia is not specified in the assignment.
+
+===== PAGE 5 =====
+1 PHYSICAL MODELLING 5
+1 Physical Modelling
+Question 1 Kinematics
+The displacement of the belt by the driving motors having a radius of𝑟𝑚 can be expressed
+by the following equation
+Δ𝑠=𝑟 𝑚Δ𝜃.(1)
+This leads to the following equations for the left and right motor being described by
+𝑟𝑚Δ𝜃𝑙 =Δ𝑥+Δ𝑦, 𝑟 𝑚Δ𝜃𝑟 =Δ𝑥−Δ𝑦. (2)
+Adding and subtracting the two belt equations gives the displacementsΔ𝑥 and Δ𝑦, respec-
+tively:
+2Δ𝑥=𝑟 𝑚Δ𝜃𝑙 +𝑟 𝑚Δ𝜃𝑟
+=𝑟 𝑚 (Δ𝜃 𝑙 +Δ𝜃 𝑟),
+Δ𝑥= 𝑟𝑚
+2 (Δ𝜃 𝑙 +Δ𝜃 𝑟).
+2Δ𝑦=𝑟 𝑚Δ𝜃𝑙 −𝑟 𝑚Δ𝜃𝑟
+=𝑟 𝑚 (Δ𝜃 𝑙 −Δ𝜃 𝑟),
+Δ𝑦= 𝑟𝑚
+2 (Δ𝜃 𝑙 −Δ𝜃 𝑟).
+(3)
+When the reference is taken to be zero (i.e.,𝑥0, 𝑦0, 𝜃𝑙,0, 𝜃𝑟,0 = 0), the prefix Δ can be
+discarded. The earlier derived equations simplify to
+𝑥= 𝑟𝑚
+2 (𝜃𝑙 +𝜃 𝑟) , 𝑦= 𝑟𝑚
+2 (𝜃𝑙 −𝜃 𝑟) . (4)
+The velocities can be found by differentiation
+¤𝑥= 𝑟𝑚
+2
+(︁¤𝜃𝑙 + ¤𝜃𝑟
+)︁
+, ¤𝑦= 𝑟𝑚
+2
+(︁¤𝜃𝑙 − ¤𝜃𝑟
+)︁
+. (5)
+The rotational speed is given by the derivative of the angle (i.e.,¤𝜃=𝜔 ). Therefore, the
+velocities can alternatively be denoted by
+¤𝑥= 𝑟𝑚
+2 (𝜔𝑙 +𝜔 𝑟) , ¤𝑦= 𝑟𝑚
+2 (𝜔𝑙 −𝜔 𝑟) . (6)
+For completeness, the accelerations are the second derivatives
+¥𝑥= 𝑟𝑚
+2 ( ¤𝜔𝑙 + ¤𝜔𝑟) , ¥𝑦= 𝑟𝑚
+2 ( ¤𝜔𝑙 − ¤𝜔𝑟) . (7)
+Question 2 Dynamics
+The model of the DC motor coupled to a disk with an inertia is shown in Figure 2.
+Figure 2: The proposed DC motor modelled as an LR circuit.
+
+===== PAGE 6 =====
+1 PHYSICAL MODELLING 6
+2.1 Electrical dynamics
+The torque of the motor is related to the current flowing through the motor𝜏𝑚 =𝐾 𝑚𝑖.
+Applying Kirchhoff’s voltage law to the schematic of Figure 2 leads to∗
+𝑢𝑚 =𝑢 𝐿𝑚 +𝑢 𝑅𝑚 +𝑢 EMF,(8)
+𝑢𝑚 =𝐿 𝑚
+𝑑𝑖 𝑚
+𝑑𝑡 +𝑅 𝑚𝑖𝑚 +𝐾 𝑚 ¤𝜃,(9)
+𝐿𝑚
+𝑑𝑖 𝑚
+𝑑𝑡 =−𝑅 𝑚𝑖𝑚 −𝐾 𝑚𝜔+𝑢 𝑚.(10)
+2.2 Mechanical dynamics
+The printer head is modelled as a mass. The belts driven by the motors exert forces on
+the mass denoted by𝐹𝑥 and 𝐹 𝑦 in Figure 3. Friction due to the linear bearings causes an
+opposite force acting on the mass. This effect is modelled by the𝜇𝑙,𝑥 ¤𝑥and𝜇 𝑙, 𝑦 ¤𝑦vectors.
+𝑚 𝐹𝑥
+𝐹 𝑦
+𝜇𝑙,𝑥 ¤𝑥
+𝜇𝑙, 𝑦 ¤𝑦
+𝑥
+𝑦
+Figure 3: In-plane forces acting on the print head. Friction forces are shown for positive
+velocities.
+Euler-LagrangeThe Euler-Lagrange method can be used in order to efficiently derive the
+mechanical model for the system. The generalized coordinates and velocities are defined as
+𝑞=
+[︃
+𝜃𝑙
+𝜃𝑟
+]︃
+, ¤𝑞=
+[︃
+𝜔𝑙
+𝜔𝑟
+]︃
+.(11)
+These states directly determine the𝑥and𝑦velocity of the printer head via Equation (6).
+The kinetic energy of the motor and printer head can be combined to determine the𝐾
+function of Euler-Lagrange
+𝐾= 1
+2 𝐽𝑚
+(︂
+𝜔2
+𝑙 +𝜔 2
+𝑟
+)︂
+⏞              ⏟⏟              ⏞
+Motor
++ 1
+2 𝑚
+(︂
+¤𝑥2 + ¤𝑦2
+)︂
+⏞           ⏟⏟           ⏞
+Printer head
+.(12)
+Substitution of the found kinematics with Equation (6) transforms the equation to
+𝐾= 1
+2 𝐽𝑚
+(︂
+𝜔2
+𝑙 +𝜔 2
+𝑟
+)︂
++ 1
+2 𝑚
+(︃(︂𝑟𝑚
+2 (𝜔𝑙 +𝜔 𝑟)
+)︂2
++
+(︂𝑟𝑚
+2 (𝜔𝑙 −𝜔 𝑟)
+)︂2)︃
+,(13)
+𝐿=𝐾= 1
+2
+(︃
+𝐽𝑚 + 𝑚𝑟2
+𝑚
+2
+)︃
+⏞         ⏟⏟         ⏞
+𝐽eff
+(︂
+𝜔2
+𝑙 +𝜔 2
+𝑟
+)︂
+.(14)
+∗The derivative is normally denoted by a dot(︁e.g., ¤𝜃
+)︁in this report except when the differential quantity is
+current (i.e.,𝑖 ). In that case, the explicit notation is used
+(︂
+i.e., 𝑑𝑖
+𝑑𝑡
+)︂
+in order to avoid confusion due to the double
+dot (︁i.e., ¤𝑖
+)︁.
+
+===== PAGE 7 =====
+1 PHYSICAL MODELLING 7
+The Lagrangian function is defined by𝐿=𝐾−𝑃 . As there is no potential energy stored in
+the model (i.e, the belts are considered non-elastic and constant height) the function𝑃= 0.
+Therefore,𝐿=𝐾.
+The dissipation function consists of the linear and pulley bearings (i.e.,𝐷=𝐷 lin +𝐷 pull).
+The dissipation function for the linear bearings can be modeled and rewritten as
+𝐷lin = 1
+2 𝜇𝑙,𝑥 ¤𝑥2 + 1
+2 𝜇𝑙, 𝑦 ¤𝑦2,(15)
+𝐷lin = 𝑟2
+𝑚
+8
+[︁
+𝜇𝑙,𝑥 (𝜔𝑙 +𝜔 𝑟)2 +𝜇 𝑙, 𝑦 (𝜔𝑙 −𝜔 𝑟)2]︁
+.(16)
+It can be observed from Figure 1 that each motor drives a belt connected to the mass along
+two fixed pulleys and two pulleys attached to the printer head rail. For the fixed pulley, its
+rotational speed is equal to𝜔𝑝 = 𝑟𝑚
+𝑟𝑝
+𝜔𝑙. Therefore, the dissipation function becomes
+𝐷pul,fixed =2 1
+2 𝜇𝑟
+(︁
+𝑟𝑝𝜔 𝑝
+)︁2 ,
+𝐷pul,fixed =2 1
+2 𝜇𝑟 (𝑟𝑚𝜔𝑙)2 .
+The centers of the four pulleys attached to the printer head rail move in the𝑦-direction.
+The dissipation term for a pulley with a relative tangential speed𝑣𝑝 is stated as𝐷𝑝 = 1
+2 𝜇𝑟 𝑣2
+𝑝.
+The relative tangential speed is equal to𝑣𝑝 = ¤𝑥. Therefore,
+𝐷pul,rail =4 1
+2 𝜇𝑟 ¤𝑥2.(17)
+Adding the dissipation terms together (i.e,𝐷=𝐷 lin +𝐷 pul,fixed,l +𝐷 pul,fixed,r +𝐷 pul,rail) and
+substitution of Equation (6) leads to
+𝐷(𝜔 𝑙, 𝜔𝑟)= 𝑟2
+𝑚
+8
+[︁
+𝜇𝑙,𝑥 (𝜔𝑙 +𝜔 𝑟)2 +𝜇 𝑙, 𝑦 (𝜔𝑙 −𝜔 𝑟)2]︁
++𝜇 𝑟𝑟2
+𝑚
+(︂
+𝜔2
+𝑙 +𝜔 2
+𝑟
+)︂
++ 1
+2 𝜇𝑟𝑟2
+𝑚 (𝜔𝑙 +𝜔 𝑟)2 .
+(18)
+All elements of theLagrange’s equation of motionare present. From this equation, the
+complete mechanical model can be derived
+𝑑
+𝑑𝑡
+𝜕𝐿
+𝜕 ¤𝑞 − 𝜕𝐿
+𝜕𝑞 =− 𝜕𝐷
+𝜕 ¤𝑞 +
+[︃
+𝐾𝑚𝑖𝑚,𝑙
+𝐾𝑚𝑖𝑚,𝑟
+]︃
+⏞    ⏟⏟    ⏞
+𝜏𝑚
+.(19)
+From Equation (14) it follows that
+𝜕𝐿
+𝜕𝑞 =
+[︃0
+0
+]︃
+, 𝑑
+𝑑𝑡
+𝜕𝐿
+𝜕 ¤𝑞 =𝐽 eff
+[︃¤𝜔𝑙
+¤𝜔𝑟
+]︃
+.(20)
+From Equation (18) the dissipation element is determined by
+𝜕𝐷
+𝜕𝜔𝑙
+= 𝑟2
+𝑚
+4
+[︁
+𝜇𝑙,𝑥 +𝜇 𝑙, 𝑦 +12𝜇 𝑟
+]︁
+⏞                        ⏟⏟                        ⏞
+𝑑𝑠
+𝜔𝑙 + 𝑟2
+𝑚
+4
+[︁
+𝜇𝑙,𝑥 −𝜇 𝑙, 𝑦 +4𝜇 𝑟
+]︁
+⏞                      ⏟⏟                      ⏞
+𝑑𝑐
+𝜔𝑟 (21)
+𝜕𝐷
+𝜕𝜔𝑟
+= 𝑟2
+𝑚
+4
+[︁
+𝜇𝑙,𝑥 −𝜇 𝑙, 𝑦 +4𝜇 𝑟
+]︁
+⏞                      ⏟⏟                      ⏞
+𝑑𝑐
+𝜔𝑙 + 𝑟2
+𝑚
+4
+[︁
+𝜇𝑙,𝑥 +𝜇 𝑙, 𝑦 +12𝜇 𝑟
+]︁
+⏞                        ⏟⏟                        ⏞
+𝑑𝑠
+𝜔𝑟.(22)
+
+===== PAGE 8 =====
+1 PHYSICAL MODELLING 8
+Which can be written compactly as
+𝜕𝐷
+𝜕 ¤𝑞 =
+[︃
+𝑑𝑠𝜔𝑙 +𝑑 𝑐𝜔𝑟
+𝑑𝑐𝜔𝑙 +𝑑 𝑠𝜔𝑟
+]︃
+.(23)
+Substitution into Equation (19) results in
+𝐽eff ¤𝜔𝑙 =𝐾 𝑚𝑖𝑚,𝑙 −𝑑 𝑠𝜔𝑙 −𝑑 𝑐𝜔𝑟,(24)
+𝐽eff ¤𝜔𝑟 =𝐾 𝑚𝑖𝑚,𝑟 −𝑑 𝑐𝜔𝑙 −𝑑 𝑠𝜔𝑟.(25)
+2.3 State-space model
+The states are chosen as
+x=
+[︁
+𝜃𝑙, 𝜃 𝑟, 𝜔 𝑙, 𝜔 𝑟, 𝑖 𝑚,𝑙 , 𝑖 𝑚,𝑟
+]︁T
+.(26)
+The input vector is defined by
+u=
+[︁
+𝑢𝑚,𝑙 , 𝑢 𝑚,𝑟
+]︁T
+.(27)
+The position of the printer head is selected as the output vector of the system
+y= [𝑥, 𝑦 ]T .(28)
+This yields the following state-space representation
+¤x=
+⎡⎢⎢⎢⎢⎢⎢⎢⎢⎢⎢⎢⎢⎢⎢⎣
+0 0 1 0 0 0
+0 0 0 1 0 0
+0 0 − 𝑑𝑠
+𝐽eff
+− 𝑑𝑐
+𝐽eff
+𝐾𝑚,𝑙
+𝐽eff
+0
+0 0 − 𝑑𝑐
+𝐽eff
+− 𝑑𝑠
+𝐽eff
+0 𝐾𝑚,𝑟
+𝐽eff
+0 0 −
+𝐾𝑚,𝑙
+𝐿𝑚,𝑙
+0 −
+𝑅𝑚,𝑙
+𝐿𝑚,𝑙
+0
+0 0 0 − 𝐾𝑚,𝑟
+𝐿𝑚,𝑟
+0 − 𝑅𝑚,𝑟
+𝐿𝑚,𝑟
+⎤⎥⎥⎥⎥⎥⎥⎥⎥⎥⎥⎥⎥⎥⎥⎦⏞                                                           ⏟⏟                                                           ⏞
+A
+x+
+⎡⎢⎢⎢⎢⎢⎢⎢⎢⎢⎢⎢⎢⎢⎢⎣
+0 0
+0 0
+0 0
+0 0
+1
+𝐿𝑚,𝑙
+0
+0 1
+𝐿𝑚,𝑟
+⎤⎥⎥⎥⎥⎥⎥⎥⎥⎥⎥⎥⎥⎥⎥⎦⏞              ⏟⏟              ⏞
+B
+u
+y=
+[︄ 𝑟𝑚
+2
+𝑟𝑚
+2 0 0 0 0
+𝑟𝑚
+2 − 𝑟𝑚
+2 0 0 0 0
+]︄
+⏞                                                           ⏟⏟                                                           ⏞
+C
+x.
+(29)
+This model assumes that the
+•belts are non-elastic and do not slip,
+•motor parameters are equal for the left and right motor,
+•mass of the printer head rail, pulleys, and inertia of the pulleys can be neglected,
+•parameters𝜇 𝑙,𝑥 , 𝜇 𝑙, 𝑦 are total linear damping coefficients per direction,
+•parameter𝜇 𝑟 denotes the tangential damping per pulley.
+
+===== PAGE 9 =====
+1 PHYSICAL MODELLING 9
+Question 3 Decouple the x and y dynamics
+3.1 Decoupling equations
+One can rewrite Equation (6) by choosing new velocity variables¤𝑥=𝑣 𝑥, ¤𝑦=𝑣 𝑦. This results
+in
+𝑣𝑥 = 𝑟𝑚
+2 (𝜔𝑙 +𝜔 𝑟) , 𝑣 𝑦 = 𝑟𝑚
+2 (𝜔𝑙 −𝜔 𝑟) . (30)
+When Equations (24) and (25) are added to each other, each side is multiplied with𝑟𝑚
+2 and
+Equation (30) are substituted this leads to
+𝐽eff ¤𝑣𝑥 = 𝑟𝑚 𝐾𝑚
+2
+(︁
+𝑖𝑚,𝑙 +𝑖 𝑚,𝑟
+)︁
+⏞       ⏟⏟       ⏞
+𝑖𝑥
+− (𝑑𝑠 +𝑑 𝑐) 𝑣𝑥 .(31)
+Similarly, for the movement along the𝑦-direction, one can write
+𝐽eff ¤𝑣𝑦 = 𝑟𝑚 𝐾𝑚
+2
+(︁
+𝑖𝑚,𝑙 −𝑖 𝑚,𝑟
+)︁
+⏞       ⏟⏟       ⏞
+𝑖𝑦
+− (𝑑𝑠 −𝑑 𝑐) 𝑣𝑦.(32)
+The electrical equations can be transformed similarly by adding Equation (10) for the left
+and subtraction for the right motor
+𝐿𝑚,𝑙
+𝑑𝑖 𝑥
+𝑑𝑡 =−𝑅 𝑚𝑖𝑥 − 2𝐾𝑚
+𝑟𝑚
+𝑣𝑥 + (︁
+𝑢𝑚,𝑙 +𝑢 𝑚,𝑟
+)︁
+⏞         ⏟⏟         ⏞
+𝑢𝑥
+,(33)
+𝐿𝑚,𝑟
+𝑑𝑖 𝑦
+𝑑𝑡 =−𝑅 𝑚𝑖𝑦 − 2𝐾𝑚
+𝑟𝑚
+𝑣𝑦 + (︁
+𝑢𝑚,𝑙 −𝑢 𝑚,𝑟
+)︁
+⏞         ⏟⏟         ⏞
+𝑢𝑦
+.(34)
+3.2 Transformed state-space model
+In order to decouple the𝑥 and 𝑦 coordinates two state-space models are presented. The
+two state vectors are chosen as
+x𝑥 = [𝑥, 𝑣 𝑥, 𝑖 𝑥]T ,x 𝑦 =
+[︁
+𝑦, 𝑣 𝑦, 𝑖 𝑦
+]︁T
+. (35)
+The inputs of the two models are represented by𝑢𝑥, 𝑢𝑦. The position of the printer head is
+selected as𝑥, 𝑦. Resulting in the transformed state-space representation
+𝑥-direction
+¤x𝑥 =
+⎡⎢⎢⎢⎢⎢⎢⎣
+0 1 0
+0 − 𝑑𝑠+𝑑𝑐
+𝐽eff
+𝑟𝑚 𝐾𝑚
+2𝐽eff
+0 − 2𝐾𝑚
+𝑟𝑚 𝐿𝑚
+− 𝑅𝑚
+𝐿𝑚
+⎤⎥⎥⎥⎥⎥⎥⎦
+x𝑥 +
+⎡⎢⎢⎢⎢⎢⎢⎣
+0
+0
+1
+𝐿𝑚
+⎤⎥⎥⎥⎥⎥⎥⎦
+𝑢𝑥,
+𝑥=
+[︂
+1 0 0
+]︂
+x𝑥 .
+(36)
+𝑦-direction
+¤x𝑦 =
+⎡⎢⎢⎢⎢⎢⎢⎣
+0 1 0
+0 − 𝑑𝑠 −𝑑 𝑐
+𝐽eff
+𝑟𝑚 𝐾𝑚
+2𝐽eff
+0 − 2𝐾𝑚
+𝑟𝑚 𝐿𝑚
+− 𝑅𝑚
+𝐿𝑚
+⎤⎥⎥⎥⎥⎥⎥⎦
+x𝑦 +
+⎡⎢⎢⎢⎢⎢⎢⎣
+0
+0
+1
+𝐿𝑚
+⎤⎥⎥⎥⎥⎥⎥⎦
+𝑢𝑦,
+𝑦=
+[︂
+1 0 0
+]︂
+x𝑦.
+(37)
+
+===== PAGE 10 =====
+1 PHYSICAL MODELLING 10
+Question 4 Drawing shapes
+The corresponding motor voltages need to be determined in order to draw an ellipse with
+the 3D-printer. The𝑥, and𝑦−coordinates can be stated as
+𝑥ref =𝑥 𝑐 +𝑎cos (Ω𝑡), 𝑦 ref =𝑦 𝑐 +𝑏sin (Ω𝑡). (38)
+Whereas𝑎, 𝑏≠0 m,𝑎≠𝑏andΩ= 2𝜋
+𝑇 . A circle is drawn when𝑎=𝑏.
+Using the decoupled state-space matrices (i.e., Equations (36) and (37)), the motor voltages
+can be derived
+𝐽eff ¥𝑥ref = 𝑟𝑚 𝐾𝑚
+2 𝑖𝑥 − (𝑑𝑠 +𝑑 𝑐) ¤𝑥ref,
+𝑖𝑥,ref = 2
+𝑟𝑚 𝐾𝑚
+[𝐽eff ¥𝑥ref + (𝑑𝑠 +𝑑 𝑐) ¤𝑥ref] ,
+𝑢𝑥 =𝐿 𝑚
+𝑑𝑖 𝑥,ref
+𝑑𝑡 +𝑅 𝑚𝑖𝑥,ref + 2𝐾𝑚
+𝑟𝑚
+¤𝑥ref.
+𝐽eff ¥𝑦ref = 𝑟𝑚 𝐾𝑚
+2 𝑖𝑦 − (𝑑𝑠 −𝑑 𝑐) ¤𝑦ref,
+𝑖𝑦,ref = 2
+𝑟𝑚 𝐾𝑚
+[𝐽eff ¥𝑦ref + (𝑑𝑠 −𝑑 𝑐) ¤𝑦ref] ,
+𝑢𝑦 =𝐿 𝑚
+𝑑𝑖 𝑦,ref
+𝑑𝑡 +𝑅 𝑚𝑖𝑦,ref + 2𝐾𝑚
+𝑟𝑚
+¤𝑦ref.
+(39)
+When 𝑎= 0.1 m, 𝑏= 0.07 m, 𝑥ref = 𝑑𝑥
+2 = 0.145 m, 𝑦ref = 𝑑 𝑦
+2 = 0.145 mand 𝑇= 10the model
+returns the following plot given in Figure 4.
+Figure 4: The ellipse drawn for𝑎= 0.1and
+𝑏=0.07.
+Figure 5: The Efteling logo. Drawn with
+𝑘=250in Equation (40).
+From Equation (38) it can be observed that using geometric functions an arbitrary shape
+can be drawn. Using the complex Fourier series one can convert the contour of an image in
+a mathematical relation. The complex Fourier series and its relation to the printer head
+position is given by
+𝑧(𝑡)=
+∑︁
+𝑘
+𝑐𝑘𝑒𝑖𝑘Ω𝑡 , 𝑥 ref(𝑡)=Re{𝑧(𝑡)}, 𝑦 ref(𝑡)=Im{𝑧(𝑡)}. (40)
+The website [1] is used to obtain the coefficients𝑐𝑘. When the coefficients from [2] are
+used, the 3D-printer draws Figure 5.
+
+===== PAGE 11 =====
+1 PHYSICAL MODELLING 11
+Question 5 Model the Nozzle
+The lumped model of the nozzle is shown in Figure 6.
+Figure 6: The lumped model of the nozzle in the electrical and thermal domain.
+Assuming that all energy dissipated in𝑅𝑛 is converted to heat and defining the voltage
+across𝑅 𝑛 as𝑣 𝑛, one can write
+𝑃heat =𝑣 𝑛𝑖𝑅 = 𝑣2
+𝑛
+𝑅𝑛
+.(41)
+The thermal capacity determines the amount of energy needed to increase the temperature
+by
+𝐶𝑡,𝑛 ¤𝑇𝑛 =𝑃 heat − 𝑇𝑛 −𝑇 𝑒
+𝑅𝑡,𝑛
+.(42)
+Substitution of Equation (41) and solving for¤𝑇𝑛 leads to
+¤𝑇𝑛 = 1
+𝐶𝑡,𝑛
+[︃𝑣2
+𝑛
+𝑅𝑛
+− 𝑇𝑛 −𝑇 𝑒
+𝑅𝑡,𝑛
+]︃
+.(43)
+Applying Kirchhoff’s voltage and current laws leads to
+𝐿𝑛
+𝑑𝑖 𝐿
+𝑑𝑡 =𝑢 𝑛 −𝑣 𝑛,(44)
+𝐶𝑛 ¤𝑣𝑛 =𝑖 𝐿 − 𝑣𝑛
+𝑅𝑛
+.(45)
+A suitable choice for the state vector is
+x𝑛 = [𝑇𝑛, 𝑖 𝐿, 𝑣 𝑛]T .(46)
+Transforming into the requested format (i.e,¤x=𝑓(x,u)) yields
+𝑑
+𝑑𝑡
+⎡⎢⎢⎢⎢⎢⎣
+𝑇𝑛
+𝑖𝐿
+𝑣𝑛
+⎤⎥⎥⎥⎥⎥⎦
+=
+⎡⎢⎢⎢⎢⎢⎢⎢⎢⎢⎢⎢⎢⎢⎢⎣
+1
+𝐶𝑡,𝑛
+(︃𝑣2
+𝑛
+𝑅𝑛
+− 𝑇𝑛 −𝑇 𝑒
+𝑅𝑡,𝑛
+)︃
+𝑢𝑛 −𝑣 𝑛
+𝐿𝑛
+𝑖𝐿 − 𝑣𝑛
+𝑅𝑛
+𝐶𝑛
+⎤⎥⎥⎥⎥⎥⎥⎥⎥⎥⎥⎥⎥⎥⎥⎦
+.(47)
+
+===== PAGE 12 =====
+1 PHYSICAL MODELLING 12
+Question 6 Printing a circle of filament (PDE)
+To aid in the derivation, Figure 7 is created to define the conventions.
+𝑇1 (𝑡)
+𝑇2 (𝑡)
+· · ·
+𝑇𝑖 (𝑡)
+· · ·
+𝐴=ℎ 2ℎ
+ℓ(𝑡)
+Δ𝑠
+Air
+𝑇𝑒 , 𝛼 air
+Bed contact
+𝛼 bed
+Print bed
+𝑇𝑏
+Figure 7: Spatial discretization of the deposited filament. Blue boundaries exchange heat
+with the air, while the orange boundary exchanges heat with the print bed.
+For a distance along the printed path, it can be defined
+0≤𝑠≤ℓ(𝑡), ¤ℓ(𝑡)=𝑣 print(𝑡). (48)
+The printing speed is given by
+𝑣print =
+√︁
+¤𝑥2 + ¤𝑦2.(49)
+The functions used for𝑥and𝑦are given in Equation (38).
+The cross-sectional area between two pieces of filament is given by𝐴=ℎ 2. The boundary
+between the air and the filament are given by𝑝air = 3ℎ. The print bed and the filament are
+in contact𝑝 bed =ℎ.
+The Partial Differential Equation (PDE) for the heat transfer can be modelled as
+𝜌𝐶𝑝 𝐴 𝜕𝑇(𝑠, 𝑡)
+𝜕𝑡⏞          ⏟⏟          ⏞
+Heat storage
+=𝜆 𝐴 𝜕2𝑇(𝑠, 𝑡)
+𝜕𝑠2
+⏞        ⏟⏟        ⏞
+Conduction
+−𝛼air3ℎ (𝑇(𝑠, 𝑡) −𝑇 𝑒)⏞                   ⏟⏟                   ⏞
+Convection
++𝛼bedℎ (𝑇𝑏 −𝑇(𝑠, 𝑡) )⏞                  ⏟⏟                  ⏞
+Heated bed
+.(50)
+The initial value condition can be found by defining𝑡𝑑 (𝑠) which indicates the time when the
+filament at position𝑠 is printed. At that time and position, the temperature of the filament
+is equal to the nozzle temperature𝑇(𝑠, 𝑡𝑑 (𝑠))=𝑇 𝑛.
+The printing temperature of the nozzle is𝑇𝑛 = 240 ◦ C. A suitable choice for filament is ABS
+as this temperature falls in the generic print temperature [3]. The material parameters of
+[3] are used in the PDE evaluation. The effective heat contact coefficient𝛼bed is selected as
+50 W/(m2 K) which is found to be adequate to illustrate the progression of the PDE versus
+time.
+
+===== PAGE 13 =====
+1 PHYSICAL MODELLING 13
+Figure 8: The ABS material properties as presented in [3]. These values are treated as
+generic parameters for ABS filament and discrepancies between different colors may be
+present.
+In order to evaluate Equation (50) one can use the Method of Lines (MOL) in order to
+numerically compute the solution by Python. The derivative is approximated by means of
+theForward Euler Method(i.e, 𝑑𝑢𝑖
+𝑑𝑡 ≈
+𝑢𝑛+1
+𝑖 −𝑢𝑛
+𝑖
+Δ𝑡 ). Substitution in Equation (50) leads to
+𝑑𝑇𝑖
+𝑑𝑡 ≈ 𝜆
+𝜌𝐶𝑝
+⏞ ⏟⏟ ⏞
+𝑎th
+𝑇𝑖+1 −2𝑇 𝑖 +𝑇 𝑖−1
+Δ𝑠2 − 3𝛼air
+𝜌𝐶𝑝ℎ
+⏞⏟⏟⏞
+𝛽air
+(𝑇𝑖 −𝑇 𝑒) + 𝛼bed
+𝜌𝐶𝑝ℎ
+⏞⏟⏟⏞
+𝛽bed
+(𝑇𝑏 −𝑇 𝑖) .(51)
+The PDE is numerically evaluated using Python. The𝑥 and 𝑦-coordinates as a function of
+time and temperature of the filament are presented in the animation of Figure 9.
+Figure 9: Printing and cooling of the filament. Open in Acrobat Reader in order to start the
+animation.
+
+===== PAGE 14 =====
+2 FINITE STATE MACHINE 14
+As time progresses, the temperature of the filament reaches a stationary value of
+𝑇∞ = 3𝛼air𝑇𝑒 +𝛼 bed𝑇𝑏
+3𝛼air +𝛼 bed
+= 3·25·300+50·378.15
+3·25+50 =331.26 K=58.11 ◦ C.(52)
+In Figure 10 the temperature versus time graph of the first and last segment are presented.
+When the ellipse closes, the first and last segment come into contact. The last element
+initially heats up the first segment after which the temperature of both segments cools down
+to the stationary value calculated in Equation (52).
+Figure 10: Temperature of the first and last segment of the printed ellipse. When the ring is
+closed, the first element heats up due to the thermal conductivity of the filament.
+2 Finite State Machine
+Question 1 Finite State Machines — Filament replacement
+The Finite State Machine (FSM) is presented in Figure 11. The definitions of the states are
+given in Table 2. The meaning of the events are summarized in Table 3.
+Table 2: Controller states.
+State Description
+𝑞0 Waiting for a new print to be loaded
+𝑞1 Heating the nozzle
+𝑞2 Return to (saved) printing location
+𝑞3 Printing the design
+𝑞4 Moving to the wiping location
+(𝑥, 𝑦) → (0,0).
+𝑞5 Wiping the excess filament off the nozzle
+𝑞6 Loading new (colored) filament
+𝑞7 Move to parking location
+Table 3: Controller events.
+Event Guard
+𝑒new,print New printing job
+𝑒hot Nozzle reaches printing
+temperature𝑇 𝑛 ≥𝑇 ref −1 K
+𝑒return Reaches (saved) printing position
+𝑒replace Color change or finishes filament
+(𝐶∨𝐹)
+𝑒park Reached parking position
+(𝑥, 𝑦) → (0,0).
+𝑒wipe Nozzle is cleaned
+𝑒load New filament is loaded
+𝑒print,complete Print is finished
+
+===== PAGE 15 =====
+2 FINITE STATE MACHINE 15
+𝑞3 𝑞4 𝑞5
+𝑞2 𝑞1 𝑞6
+𝑞7 𝑞0
+Printing Moving to wipe
+Wiping
+Returning
+Heating
+Loading
+Parking Waiting for new print
+𝑒replace 𝑒park
+𝑒wipe
+𝑒load𝑒hot
+𝑒return
+𝑒new,print
+𝑒park
+𝑒print,complete
+Figure 11: Extended finite state machine of the 3D-printer. The initial state is𝑞0.
+The systems start in𝑞0 and is denoted as the initial condition. The system waits for a new
+printing design to be loaded. When a new printing design is received, the system transitions
+to the heating state𝑞1. In this stage, the nozzle is heated to a given reference temperature
+𝑇ref. When this temperature is reached within1 K, the printer head can be moved towards
+the printing position. In the case of a saved position, the printer head will move to the saved
+state. This decision is taken in𝑞2. When the printer head has reached the desired position,
+the system enters the printing𝑞3 stage. The printer will continue printing until
+1. A change of color is requested, or the filament roll is finished (𝐶∨𝐹).
+2. The printing trajectory is completed.
+In the case of a control flow signal being present (i.e.,𝐶∨𝐹= 1) the system will save its
+current position and move to the wiping position ((𝑥, 𝑦) → ( 0, 0)) denoted by stage𝑞4. At
+that position, the nozzle will be wiped in order to remove any excess filament coming out
+of the nozzle in state𝑞5. In this stage, the nozzle is turned off prior to the loading of new
+filament. After loading, the nozzle is turned on again to resume printing and reaches state
+𝑞1 again.
+When the printed design has completed. The system will move towards the parking state
+𝑞7 which will move the printing head to the parking position ((𝑥, 𝑦) → ( 0, 0)). When the
+printer head reaches the parking position, the system reaches𝑞0 which is the initial stage of
+the printer.
+Question 2 Automata — Parked detection
+The automaton for the parked detection is given in Figure 12.
+
+===== PAGE 16 =====
+3 HYBRID SYSTEM 16
+𝑞∅ 𝑞𝐻
+𝑞𝑉 𝑞𝐻𝑉
+(𝐻,0)
+(𝑉,0) (𝑉,0)
+(𝐻,0)
+(𝐻,+)
+(𝑉,+)
+(𝐻,+),(𝐻,0)
+(𝑉,+)
+(𝑉,+),(𝑉,0)
+(𝐻,+)
+Σ
+Figure 12: Automaton for detecting the
+bottom-left parking position. The
+accepting state𝑞 𝐻𝑉 indicates that both
+end positions have been reached.
+Table 4: Automaton states.
+State Description
+𝑞∅ Printer head has not reached a
+boundary
+𝑞𝐻 Printer head has reached the
+left boundary
+𝑞𝑉 Printer head has reached the
+bottom boundary
+𝑞𝐻𝑉 Printer head has reached the
+origin.
+The parking detector is defined by
+A=(𝑄,Σ, 𝛿, 𝑞 ∅, 𝐹acc),(53)
+where
+𝑄={𝑞 ∅, 𝑞𝐻, 𝑞𝑉 , 𝑞𝐻𝑉 },Σ={(𝐻,+),(𝐻,0),(𝑉,+),(𝑉,0)}, 𝐹 acc ={𝑞 𝐻𝑉 }. (54)
+3 Hybrid system
+Question 1 Filament replacement
+The mechanical, electrical and nozzle models derived in the previous chapters are combined
+into the following continuous dynamics.
+1.1 Model
+The physical state vector is defined as
+z=
+[︁
+𝑥 , 𝑣 𝑥 , 𝑖𝑥 , 𝑦 , 𝑣 𝑦 , 𝑖 𝑦 , 𝑇𝑛 , 𝑖𝐿 , 𝑣𝑛
+]︁T
+.(55)
+The coupled continuous dynamics are given by
+¤z=
+⎡⎢⎢⎢⎢⎣
+𝐴𝑥x𝑥 +𝐵 𝑥𝑢𝑥
+𝐴 𝑦x𝑦 +𝐵 𝑦𝑢𝑦
+𝑓𝑛(x𝑛, 𝑢𝑛)
+⎤⎥⎥⎥⎥⎦
+,u=𝜅(𝑞,z, 𝜏 𝑝)(56)
+where 𝜏𝑝 denotes the effective printing time andu=
+[︁
+𝑢𝑥, 𝑢 𝑦, 𝑢 𝑛
+]︁T
+. The operating mode
+determines the voltage level that needs to be applied to the motors. During the printing state,
+
+===== PAGE 17 =====
+3 HYBRID SYSTEM 17
+the motor voltages are calculated from the feedforward expressions given in Equation (39).
+In the parking and returning stages the horizontal and vertical movements are performed
+after each other as given in Figure 12. The nozzle voltage is switched off during loading
+and waiting. The voltage is switched on during heating, printing, and wiping.
+¤𝜏𝑝 =
+{︄
+1, 𝑞=PRINTING,
+0,otherwise,
+¤𝜏𝑞 =1,(57)
+The timer for the mode duration𝜏𝑞 is reset to zero when an event has occurred. The effective
+printing timer 𝜏𝑝 continues only during the printing stage. Its status is preserved during
+other states.
+1.2 Numerical parameters
+For the nozzle temperature dynamics given in Equation (47) the parameters given in Table 5
+are used.
+Table 5: Additional parameters used in the hybrid simulation.
+Parameter Value Basis
+𝐿𝑛 10 mHAssumed electrical parameter.
+𝐶𝑛 100µFAssumed electrical parameter.
+𝐶𝑡,𝑛 4.55 J/KEstimated using𝐶 𝑡,𝑛 =𝑚 𝑛𝑐 𝑝.
+𝑢𝑛,eq 13.76 VCalculated from the thermal equilibrium.
+𝑡wipe 50 sAssumed duration of the wiping process.
+𝑇ref 240 ◦ CSelected printing temperature.
+The integration of the nozzle model is done using theRadau method [4]. The nozzle is
+assumed to be made of brass. The material properties in order to model the nozzle are
+given in [5].
+1.3 Guards
+Table 6: Guards denoting the conditions that need to be met in order to initiate an event.
+Transition Condition
+𝑞0 →𝑞 1 New printing job available.
+𝑞1 →𝑞 2 𝑇𝑛 ≥𝑇 ref −1 K.
+𝑞2 →𝑞 3 Goal position reached after returning.
+𝑞3 →𝑞 4 𝐶∨𝐹
+𝑞4 →𝑞 5 Printer head reaches the origin(𝑥, 𝑦) → (0,0).
+𝑞5 →𝑞 6 𝜏𝑞 ≥𝑡 wipe.
+𝑞6 →𝑞 1 Considered when𝑇𝑛 ≤333 K.
+𝑞3 →𝑞 7 Print trajectory finished.
+𝑞7 →𝑞 0 Printer head reaches the origin(𝑥, 𝑦) → (0,0).
+For this simulation, filament loading is assumed to be completed when the nozzle tempera-
+ture has decreased to333 K.
+
+===== PAGE 18 =====
+3 HYBRID SYSTEM 18
+1.4 Reset
+In case of a replacement request (𝐶∨𝐹= 1), the mechanical state is saved, and the timer𝜏𝑞
+is reset at a mode transition
+z+
+s,mech =
+[︁
+𝑥 , 𝑣 𝑥 , 𝑖𝑥 , 𝑦 , 𝑣 𝑦 , 𝑖 𝑦
+]︁T
+. 𝜏 +
+𝑞 =0. (58)
+When printing resumes, the saved mechanical state is restored
+z+
+mech =z s,mech.(59)
+Anidealizedresetissimulatedbyrestoringthesavedvelocitiesandcurrentusedtoreconnect
+the simulation of the printing trajectory.
+1.5 Invariants
+Table 7: Mode invariants and admissible operating conditions.
+Invariant Condition
+𝑞0 Printing head remains parked
+𝑞1 𝑇𝑛 ≤𝑇 ref −1 K
+𝑞2 No additional invariant
+𝑞3 ¬(𝐶∨𝐹)and0≤𝜏 𝑝 ≤500 s
+𝑞4 No additional invariant
+𝑞5 0≤𝜏 𝑞 ≤𝑡 wipe
+𝑞6 0≥333 K.
+𝑞7 No additional invariant
+1.6 Simulation settings
+1. The PDE of the thermal dynamics of the filament is updated using Forward Euler.
+2.Radauintegrates the coupled electromechanical and nozzle dynamics.
+3. New filament is deposited only during printing and is initialized at the current nozzle
+temperature.
+4. A color change request interrupts the printing process.
+5. After resuming, the remaining trajectory is finished.
+6. After parking, the printer waits with input𝑢𝑛 =0.
+The calculated58 .11 ◦ C is connected to the filament while in contact with the heated bed.
+The nozzle is not in direct contact with the heated bed and therefore settles to the room
+temperature of26.85 ◦ C.
+Question 2 Draw a square
+TheanimationFigure13demonstratesthetotalfunctioningofthe3D-printer. Thesimulation
+starts with the nozzle temperature begin equal to the room temperature and the printers
+head positioned in the parking state. At first the nozzle heats up. Printing of the square
+starts when the nozzle is heated up. The temperature of the filament is shown, and it can be
+
+===== PAGE 19 =====
+REFERENCES 19
+observed that the newly printed filament is heated to the nozzle temperature. The filament
+cools down to the equilibrium temperature. After125 s, a new color is requested and the
+printer head will return to the origin and stay there for50 sto simulate the wiping action.
+After the wiping action, the nozzle cools down to333 Ksimulating that new filament is
+loaded and the printer head moves to the saved position. When this position is reached, the
+printer continues to complete the print trajectory. After finishing, the printer head moves to
+the parked position and the nozzle turned off.
+Figure 13: Simulation of the hybrid 3D-printer model. Open in Acrobat Reader in order to
+start the animation.
+References
+[1] Jeremy Lee. “Fourier Pen,” Accessed: Oct. 24, 2026. [Online]. Available:https://
+fourier-pen.vercel.app/
+[2] E. den Boer,Complex fourier series for the efteling logo, Unpublished CSV file, 2026.
+[3] T.Santosetal.,“Insightsintotemperaturesimulationandvalidationoffuseddeposition
+modeling processes,”Journal of Manufacturing and Materials Processing, vol. 7, no. 6,
+p. 189, 2023.
+
+===== PAGE 20 =====
+REFERENCES 20
+[4] T. S. community. “Scipy.integrate.radau,” Accessed: Oct. 31, 2026. [Online]. Available:
+https://docs.scipy.org/doc/scipy/reference/generated/scipy.integrate.
+%7BR%7Dadau.html%5C#r04c194a64501-1
+[5] S. B. Industries. “Thermal conductivity of brass,” Accessed: Oct. 31, 2026. [Online].
+Available: https : / / www . surajbrassindustries . com / latest - news / thermal -
+conductivity-of-brass/

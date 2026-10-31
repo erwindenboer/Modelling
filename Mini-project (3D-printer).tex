@@ -73,7 +73,7 @@ In \Cref{fig:3D-printer} the schematic overview with the associated variable nam
         Motor resistance
             & $R_m$ & 90 & \unit{\ohm} \\
         Motor inertia
-            & $J_m$ & \multicolumn{1}{c}{\num{8e-6}} & \textemdash \\
+            & $J_m$ & \multicolumn{1}{c}{\num{8e-6}} & \unit{\kilogram\meter\squared} \\
         Motor constant
             & $K_m$ & 0.07
             & \unit{\newton\metre\per\ampere} \\
@@ -589,9 +589,10 @@ Using the decoupled state-space matrices (i.e., \Cref{eq:ss-x,eq:ss-y}), the mot
         u_y &= L_m\frac{di_{y,\text{ref}}}{dt}+R_m i_{y,\text{ref}}+\frac{2K_m}{r_m}\dot{y}_{\text{ref}}.
     \end{aligned}
 \end{array}
+\label{eq:feedforward}
 \end{equation}
 
-When $a=\SI{0.1}{\meter} $, $b=\SI{0.07}{\meter}$, $x_{\text{ref}}=\frac{dx}{2}=\SI{0.145}{\meter}$, $y_{\text{ref}}=\frac{dy}{2}=\SI{0.145}{\meter}$ and $T=10$ the model returns the following plot given in \Cref{fig:Ellipse}. 
+When $a=\SI{0.1}{\meter} $, $b=\SI{0.07}{\meter}$, $x_{c}=\frac{dx}{2}=\SI{0.145}{\meter}$, $y_{c}=\frac{dy}{2}=\SI{0.145}{\meter}$ and $T=\SI{10}{\second}$ the model returns the following plot given in \Cref{fig:Ellipse}. 
 
 \begin{figure}[htbp]
     \centering
@@ -676,7 +677,7 @@ Transforming into the requested format (i.e, $\dot{\mathbf{x}}=f(\mathbf{x},\mat
         \dfrac{1}{C_{t,n}}\left(\dfrac{v_n^2}{R_n}-\dfrac{T_n-T_e}{R_{t,n}}\right)\\
         \dfrac{u_n-v_n}{L_n}\\
         \dfrac{i_L-\dfrac{v_n}{R_n}}{C_n}
-    \end{bNiceMatrix}.
+    \end{bNiceMatrix}.\label{eq:nozzle}
 \end{align}
 
 \subsection{Printing a circle of filament (PDE)}
@@ -903,59 +904,98 @@ In \Cref{fig:first_last_filament} the temperature versus time graph of the first
 \subsection{Finite State Machines — Filament replacement}
 The Finite State Machine (FSM) is presented in \Cref{fig:filament-fsm}. The definitions of the states are given in \Cref{tab:fsm-states}. The meaning of the events are summarized in \Cref{tab:fsm-events}.
 
-\begin{figure}[H]
+\begin{figure}[htbp]
     \centering
     \begin{tikzpicture}[
-        scale=1.1,
-        transform shape,
-        node distance=18mm and 27mm,
-        every state/.append style={
+        every state/.style={
             circle,
+            draw=black,
             semithick,
             fill=gray!10,
             minimum size=12mm,
             font=\small
         },
-        initial text={},
-        initial distance=7mm,
-        every edge/.append style={
+        every edge/.style={
             draw,
             ->,
             >=Stealth,
             semithick
+        },
+        initial text={},
+        initial distance=10mm,
+        every node/.style={font=\small},
+        description/.style={
+            font=\small,
+            align=center
         }
     ]
-        % States
-        \node[state,initial] (print) {$q_0$};
-        \node[state,right=of print] (move) {$q_1$};
-        \node[state,right=of move] (wipe) {$q_2$};
-        \node[state,below=of wipe] (load) {$q_3$};
-        \node[state,left=of load] (heat) {$q_4$};
-        \node[state,left=of heat] (return) {$q_5$};
 
-        % Transitions
+        % States: same numbering as the Python simulation
+        \node[state] (print)  at (0, 0)       {$q_3$};
+        \node[state] (move)   at (3.5, 0)     {$q_4$};
+        \node[state] (wipe)   at (7, 0)       {$q_5$};
+
+        \node[state] (return) at (0, -2.6)    {$q_2$};
+        \node[state] (heat)   at (3.5, -2.6)  {$q_1$};
+        \node[state] (load)   at (7, -2.6)    {$q_6$};
+
+        \node[state] (park)   at (0, -5.2)    {$q_7$};
+        \node[state, initial, initial where=right]
+            (wait) at (3.5, -5.2) {$q_0$};
+
+        % State descriptions
+        \node[description, above=2mm of print]  {Printing};
+        \node[description, above=2mm of move]   {Moving to wipe};
+        \node[description, right=2mm of wipe]   {Wiping};
+
+        \node[description, below=2mm of return] {Returning};
+        \node[description, above=2mm of heat]   {Heating};
+        \node[description, below=2mm of load]   {Loading};
+
+        \node[description, below=2mm of park]   {Parking};
+        \node[description, below=2mm of wait]   {Waiting for new print};
+
+        % Filament replacement cycle
         \path
             (print) edge
-                node[above, align=center, font=\small] {
-                    $C\lor F$\\
-                    $(x_s,y_s)\leftarrow(x,y)$\\
-                    $e_{\mathrm{replace}}$
-                }
-                (move)
-            (move) edge node[above] {$e_{\mathrm{park}}$} (wipe)
-            (wipe) edge node[right] {$e_{\mathrm{wipe}}$} (load)
-            (load) edge node[below] {$e_{\mathrm{load}}$} (heat)
-            (heat) edge node[below] {$e_{\mathrm{hot}}$} (return)
-            (return) edge node[left] {$e_{\mathrm{return}}$} (print);
+                node[above] {$e_{\mathrm{replace}}$} (move)
+            (move) edge
+                node[above] {$e_{\mathrm{park}}$} (wipe)
+            (wipe) edge
+                node[right] {$e_{\mathrm{wipe}}$} (load)
+            (load) edge
+                node[above] {$e_{\mathrm{load}}$} (heat)
+            (heat) edge
+                node[above] {$e_{\mathrm{hot}}$} (return)
+            (return) edge
+                node[left] {$e_{\mathrm{return}}$} (print);
+
+        % New print command and parking
+        \path
+            (wait) edge
+                node[right] {$e_{\mathrm{new,print}}$} (heat)
+            (park) edge
+                node[above] {$e_{\mathrm{park}}$} (wait);
+
+        % Completion branch outside the main cycle
+        \draw[->, >=Stealth, semithick]
+            (print.west)
+            -- ++(-1.4, 0)
+            coordinate (completionTop)
+            -- (completionTop |- park.west)
+            node[midway, left, rotate=90, anchor=south]
+                {$e_{\mathrm{print,complete}}$}
+            -- (park.west);
 
     \end{tikzpicture}
-    \caption{Finite state machine for filament replacement.
+
+    \caption{Extended finite state machine of the 3D-printer.
     The initial state is $q_0$.}
     \label{fig:filament-fsm}
 \end{figure}
 
 \begin{figure}[H]
-    \begin{minipage}{0.43\linewidth}
+    \begin{minipage}{0.5\linewidth}
         \vspace{0pt}
         \centering
         \captionsetup{width=\linewidth,font=small}
@@ -970,18 +1010,20 @@ The Finite State Machine (FSM) is presented in \Cref{fig:filament-fsm}. The defi
             \toprule
             \textbf{State} & \textbf{Description} \\
             \midrule
-            $q_0$ & Printing \\
-            $q_1$ & Moving to the wipe tower \\
-            $q_2$ & Wiping excess filament \\
-            $q_3$ & Loading new filament; heater off \\
-            $q_4$ & Heating the nozzle \\
-            $q_5$ & Returning to the saved print position \\
+            $q_0$ & Waiting for a new print to be loaded \\
+            $q_1$ & Heating the nozzle \\
+            $q_2$ & Return to (saved) printing location \\
+            $q_3$ & Printing the design \\
+            $q_4$ & Moving to the wiping location $(x,y)\rightarrow(0,0)$. \\
+            $q_5$ & Wiping the excess filament off the nozzle \\
+            $q_6$ & Loading new (colored) filament\\
+            $q_7$ & Move to parking location \\
             \bottomrule
         \end{tabularx}
     \end{minipage}
     \hfill
     % State descriptions
-        \begin{minipage}{0.55\linewidth}
+        \begin{minipage}{0.48\linewidth}
         \vspace{0pt}
         \centering
         \captionsetup{width=\linewidth,font=small}
@@ -994,26 +1036,34 @@ The Finite State Machine (FSM) is presented in \Cref{fig:filament-fsm}. The defi
             @{}c >{\raggedright\arraybackslash}X@{}
         }
             \toprule
-            \textbf{Event} & \textbf{Description} \\
+            \textbf{Event} & \textbf{Guard} \\
             \midrule
-            $e_{\text{replace}}$ & The filament needs to be changed $(C\lor F$), nozzle is turned off, position is saved \\
-            $e_{\text{park}}$ & The printer head has reached the wipe tower \\
-            $e_{\text{wipe}}$ & The nozzle has been wiped \\
-            $e_{\text{load}}$ & New filament is loaded into the nozzle \\
-            $e_{\text{hot}}$ & Nozzle has reached the desired temperature \\
-            $e_{\text{return}}$ & Printer head has reached the saved position \\
+            $e_{\text{new,print}}$      & New printing job \\
+            $e_{\text{hot}}$     & Nozzle reaches printing temperature $T_n \geq T_{\text{ref}}-\SI{1}{\kelvin}$ \\
+            $e_{\text{return}}$    & Reaches (saved) printing position \\
+            $e_{\text{replace}}$ & Color change or finishes filament ($C \lor F$) \\
+            $e_{\text{park}}$ & Reached parking position $(x,y) \rightarrow (0,0)$. \\
+            $e_{\text{wipe}}$ & Nozzle is cleaned \\
+            $e_{\text{load}}$ & New filament is loaded \\
+            $e_{\text{print,complete}}$ & Print is finished \\
             \bottomrule
         \end{tabularx}
     \end{minipage}
 \end{figure}
 
-State $q_0$ is selected as the initial state. This state denotes the printing stage and there is no need for a new color to be printed nor a finished spool. When $C$ or $F$ are activated, the current location of the printer head is stored in the variables $(x_s,y_s)$ and the extrusion of the filament is halted. The state becomes $q_1$ which indicates the process of the printer head moving to the wipe tower. When the printer head reaches the wipe tower event $e_{\text{park}}$ has occurred. In state $q_2$, the excess filament coming from the nozzle is wiped off. The heating of the nozzle is switched off and becomes ready for the loading of new filament as given by $q_3$. Event $e_{\text{load}}$ denotes that new filament is loaded into the nozzle and the nozzle can be heated again. When the nozzle heats up to the required temperature, the system enters state $q_5$ which returns the nozzle to the print position as saved in $(x_s,y_s)$ and the system has reached the initial state again. There is no accepting state as the 3D-printer continues this cycle until it is turned off.
+The systems start in $q_0$ and is denoted as the initial condition. The system waits for a new printing design to be loaded. When a new printing design is received, the system transitions to the heating state $q_1$. In this stage, the nozzle is heated to a given reference temperature $T_{\text{ref}}$. When this temperature is reached within \SI{1}{\kelvin}, the printer head can be moved towards the printing position. In the case of a saved position, the printer head will move to the saved state. This decision is taken in $q_2$. When the printer head has reached the desired position, the system enters the printing $q_3$ stage. The printer will continue printing until 
+\begin{enumerate}
+    \item A change of color is requested, or the filament roll is finished ($C \lor F$).
+    \item The printing trajectory is completed.
+\end{enumerate}  In the case of a control flow signal being present (i.e., $C \lor F = 1$) the system will save its current position and move to the wiping position ($(x,y) \rightarrow (0,0)$) denoted by stage $q_4$. At that position, the nozzle will be wiped in order to remove any excess filament coming out of the nozzle in state $q_5$. In this stage, the nozzle is turned off prior to the loading of new filament. After loading, the nozzle is turned on again to resume printing and reaches state $q_1$ again.
+
+When the printed design has completed. The system will move towards the parking state $q_7$ which will move the printing head to the parking position ($(x,y) \rightarrow (0,0)$). When the printer head reaches the parking position, the system reaches $q_0$ which is the initial stage of the printer.
 
 \subsection{Automata — Parked detection}
 
 The automaton for the parked detection is given in \Cref{fig:parked-automaton}.
 
-\begin{figure}[htbp]
+\begin{figure}[H]
     \begin{minipage}{0.45\linewidth}
         \centering
         \begin{tikzpicture}[
@@ -1118,15 +1168,203 @@ where
 \end{aligned}
 \end{equation}
 
+Element $H$ denotes the horizontal movement of the printer head whereas $V$ denotes the vertical movement. A $+$ indicates that the printer heads velocity is non-zero and is therefore moving. When a $0$ is reported, the printer head has stopped moving and has reached the boundary of the printer bed. When both $H$ and $V$ are equal to 0, the printer head has reached the parking position and the automaton can be reset to the initial state. 
+
 \section{Hybrid system}
 
 \subsection{Filament replacement}
-The total system state vector is defined as
+The mechanical, electrical and nozzle models derived in the previous chapters are combined into the following continuous dynamics.
+
+\subsubsection{Model}
+
+The physical state vector is defined as
 \begin{align}
     \mathbf{z} &= \left[x \;, v_x \;, i_x \;, y \;, v_y \;, i_y \;, T_n \;, i_L \;, v_n\right]^{\mathsf{T}}.
 \end{align}
 
+The coupled continuous dynamics are given by 
+
+\begin{equation}
+\begin{aligned}
+    \dot{\mathbf{z}}
+    &=
+    \begin{bNiceMatrix}
+        A_x \mathbf{x}_x + B_x u_x \\
+        A_y \mathbf{x}_y + B_y u_y \\
+        f_n(\mathbf{x}_n,u_n)
+    \end{bNiceMatrix},
+    &\qquad
+    \mathbf{u}  &= \kappa(q,\mathbf{z},\tau_p)
+\end{aligned}
+\end{equation}
+
+where $\tau_p$ denotes the effective printing time and $\mathbf{u}=\left[u_x, \; u_y, \; u_n\right]^{\mathsf{T}}$. The operating mode determines the voltage level that needs to be applied to the motors. During the printing state, the motor voltages are calculated from the feedforward expressions given in \Cref{eq:feedforward}. In the parking and returning stages the horizontal and vertical movements are performed after each other as given in \Cref{fig:parked-automaton}. The nozzle voltage is switched off during loading and waiting. The voltage is switched on during heating, printing, and wiping. 
+
+\begin{equation}
+\begin{aligned}
+    \dot{\tau}_p
+    &=
+    \begin{cases}
+		1, & q=\text{PRINTING},\\
+        0, & \text{otherwise},
+	\end{cases}
+    &\qquad
+    \dot{\tau}_q  &= 1,
+\end{aligned}
+\end{equation}
+
+The timer for the mode duration $\tau_q$ is reset to zero when an event has occurred. The effective printing timer $\tau_p$ continues only during the printing stage. Its status is preserved during other states.
+
+\subsubsection{Numerical parameters}
+
+For the nozzle temperature dynamics given in \Cref{eq:nozzle} the parameters given in \Cref{tab:parameter} are used.
+
+\begin{table}[htbp]
+    \centering
+    \caption{Additional parameters used in the hybrid simulation.}
+    \label{tab:parameter}
+    \small
+    \begin{tabularx}{0.8\linewidth}{
+        @{}
+        l
+        l
+        >{\raggedright\arraybackslash}X
+        @{}
+    }
+        \toprule
+        \textbf{Parameter} & \textbf{Value} & \textbf{Basis} \\
+        \midrule
+        $L_n$
+            & \SI{10}{\milli\henry}
+            & Assumed electrical parameter. \\
+        $C_n$
+            & \SI{100}{\micro\farad}
+            & Assumed electrical parameter. \\
+        $C_{t,n}$
+            & \SI{4.55}{\joule\per\kelvin}
+            & Estimated using $C_{t,n}=m_n c_p$. \\
+        $u_{n,\mathrm{eq}}$
+            & \SI{13.76}{\volt}
+            & Calculated from the thermal equilibrium. \\
+        $t_{\mathrm{wipe}}$
+            & \SI{50}{\second}
+            & Assumed duration of the wiping process. \\
+        $T_{\mathrm{ref}}$
+            & \SI{240}{\degreeCelsius}
+            & Selected printing temperature. \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+The integration of the nozzle model is done using the \texttt{Radau} method \cite{scipyRadaux2014}. The nozzle is assumed to be made of brass. The material properties in order to model the nozzle are given in \cite{brass}.
+
+\subsubsection{Guards}
+
+\begin{table}[H]
+    \centering
+    \caption{Guards denoting the conditions that need to be met in order to initiate an event.}
+    \label{tab:guards}
+    \small
+    \begin{tabularx}{0.8\linewidth}{
+        @{}
+        l
+        >{\raggedright\arraybackslash}X
+        @{}
+    }
+        \toprule
+        \textbf{Transition} & \textbf{Condition} \\
+        \midrule
+        $q_0 \rightarrow q_1$   & New printing job available.\\
+        $q_1 \rightarrow q_2$   & $T_n \geq T_{\text{ref}}-\SI{1}{\kelvin}$.\\
+        $q_2 \rightarrow q_3$   & Goal position reached after returning.\\
+        $q_3 \rightarrow q_4$   & $C \lor F$\\
+        $q_4 \rightarrow q_5$   & Printer head reaches the origin $(x,y) \rightarrow (0,0)$.\\
+        $q_5 \rightarrow q_6$   & $\tau_q \geq t_{\text{wipe}}$.\\
+        $q_6 \rightarrow q_1$   & Considered when $T_n \leq \SI{333}{\kelvin}$.\\
+        $q_3 \rightarrow q_7$   & Print trajectory finished.\\
+        $q_7 \rightarrow q_0$   & Printer head reaches the origin $(x,y) \rightarrow (0,0)$.\\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+For this simulation, filament loading is assumed to be completed when the nozzle temperature has decreased to \SI{333}{\kelvin}.
+
+\subsubsection{Reset}
+In case of a replacement request ($C \lor F=1$), the mechanical state is saved, and the timer $\tau_q$ is reset at a mode transition
+
+\begin{equation}
+\begin{aligned}
+    \mathbf{z}_{\text{s,mech}}^+ &= \left[x \;, v_x \;, i_x \;, y \;, v_y \;, i_y\right]^{\mathsf{T}}.
+    &\qquad
+    \tau_q^+  &= 0.
+\end{aligned}
+\end{equation}
+
+When printing resumes, the saved mechanical state is restored 
+
+\begin{align}
+    \mathbf{z}_{\text{mech}}^+ &= \mathbf{z}_{\text{s,mech}}.
+\end{align}
+
+An idealized reset is simulated by restoring the saved velocities and current used to reconnect the simulation of the printing trajectory.
+
+\subsubsection{Invariants}
+
+\begin{table}[htbp]
+    \centering
+    \caption{Mode invariants and admissible operating conditions.}
+    \label{tab:invariants}
+    \small
+    \begin{tabularx}{0.8\linewidth}{
+        @{}
+        l
+        >{\raggedright\arraybackslash}X
+        @{}
+    }
+        \toprule
+        \textbf{Invariant} & \textbf{Condition} \\
+        \midrule
+        $q_0$   & Printing head remains parked\\
+        $q_1$   & $T_n \le T_{\text{ref}} - \SI{1}{\kelvin}$\\
+        $q_2$   & No additional invariant\\
+        $q_3$   & $\lnot (C \lor F)$ and $0 \leq \tau_p \le \SI{500}{\second}$\\
+        $q_4$   & No additional invariant\\
+        $q_5$   & $0 \leq \tau_q \le t_{\text{wipe}}$ \\
+        $q_6$   & $T_n \geq \SI{333}{\kelvin}$. \\
+        $q_7$   & No additional invariant\\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+\subsubsection{Simulation settings}
+\begin{enumerate}
+    \item The PDE of the thermal dynamics of the filament is updated using Forward Euler.
+    \item \texttt{Radau} integrates the coupled electromechanical and nozzle dynamics.
+    \item New filament is deposited only during printing and is initialized at the current nozzle temperature.
+    \item A color change request interrupts the printing process.
+    \item After resuming, the remaining trajectory is finished.
+    \item After parking, the printer waits with input $u_n=0$.
+\end{enumerate}
+
+The calculated \SI{58.11}{\degreeCelsius} is connected to the filament while in contact with the heated bed. The nozzle is not in direct contact with the heated bed and therefore settles to the room temperature of $\SI{26.85}{\degreeCelsius}$.
+
 \subsection{Draw a square}
+
+The animation \Cref{fig:hybrid-animation} demonstrates the total functioning of the 3D-printer. The simulation starts with the nozzle temperature begin equal to the room temperature and the printers head positioned in the parking state. At first the nozzle heats up. Printing of the square starts when the nozzle is heated up. The temperature of the filament is shown, and it can be observed that the newly printed filament is heated to the nozzle temperature. The filament cools down to the equilibrium temperature. After $\tau_p=\frac{500}{3}\approx \SI{166.7}{\second}$ of effective printing time, a new color is requested and the printer head will return to the origin and stay there for \SI{50}{\second} to simulate the wiping action. After the wiping action, the nozzle cools down to \SI{333}{\kelvin} simulating that new filament is loaded. When the filament is loaded, the nozzle heats up again to the reference temperature and the printer head moves to the saved position. When this position is reached, the printer continues to complete the print trajectory. After finishing, the printer head moves to the parked position and the nozzle turned off.
+
+The angle speed sensors can be used to determine the position of the printer head with the equations
+
+\begin{equation}
+\begin{aligned}
+    \dot{\hat{x}} &= \frac{r_m}{2} \left(\omega_l + \omega_r\right),
+    &\qquad
+    \dot{\hat{y}} &= \frac{r_m}{2} \left(\omega_l - \omega_r\right).
+\end{aligned}
+\end{equation}
+
+By integration, the position of the printer head $\hat{x},\hat{y}$ can be obtained.
+A square has four straight sides by which the velocity of $\dot{\hat{x}}$ and $\dot{\hat{y}}$ will be zero sequentially. The movement of the printer head slows down when it reaches a corner of the square and is equal to zero at the corner. When the velocity of the printer head is equal to zero, the next side of the square will be drawn. The results neglect ideal sensors and no slipping being present.
+
 
 \begin{figure}[htbp]
     \centering
@@ -1135,7 +1373,7 @@ The total system state vector is defined as
         loop,
         poster=last,
         width=\linewidth
-    ]{3}{frames_Q3_1/frame-}{000}{119}
+    ]{6}{frames_Q3_1/frame-}{000}{119}
     \caption{Simulation of the hybrid 3D-printer model. Open in Acrobat Reader in order to start the animation.}
     \label{fig:hybrid-animation}
 \end{figure}

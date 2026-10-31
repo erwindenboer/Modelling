@@ -137,6 +137,72 @@
       \field{pages}{189}
       \range{pages}{1}
     \endentry
+    \entry{scipyRadaux2014}{online}{}{}
+      \name{author}{1}{}{%
+        {{hash=a4264a3c2be66c54538e87eab3c0d4ec}{%
+           family={community},
+           familyi={c\bibinitperiod},
+           given={The\bibnamedelima SciPy},
+           giveni={T\bibinitperiod\bibinitdelim S\bibinitperiod}}}%
+      }
+      \strng{namehash}{a4264a3c2be66c54538e87eab3c0d4ec}
+      \strng{fullhash}{a4264a3c2be66c54538e87eab3c0d4ec}
+      \strng{fullhashraw}{a4264a3c2be66c54538e87eab3c0d4ec}
+      \strng{bibnamehash}{a4264a3c2be66c54538e87eab3c0d4ec}
+      \strng{authorbibnamehash}{a4264a3c2be66c54538e87eab3c0d4ec}
+      \strng{authornamehash}{a4264a3c2be66c54538e87eab3c0d4ec}
+      \strng{authorfullhash}{a4264a3c2be66c54538e87eab3c0d4ec}
+      \strng{authorfullhashraw}{a4264a3c2be66c54538e87eab3c0d4ec}
+      \field{sortinit}{7}
+      \field{sortinithash}{108d0be1b1bee9773a1173443802c0a3}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{title}{scipy.integrate.Radau}
+      \field{urlday}{31}
+      \field{urlmonth}{10}
+      \field{urlyear}{2026}
+      \field{year}{2026}
+      \field{urldateera}{ce}
+      \verb{urlraw}
+      \verb https://docs.scipy.org/doc/scipy/reference/generated/scipy.integrate.{R}adau.html\#r04c194a64501-1
+      \endverb
+      \verb{url}
+      \verb https://docs.scipy.org/doc/scipy/reference/generated/scipy.integrate.%7BR%7Dadau.html%5C#r04c194a64501-1
+      \endverb
+    \endentry
+    \entry{brass}{online}{}{}
+      \name{author}{1}{}{%
+        {{hash=ae1dbec97168cf2208662d429904cd4d}{%
+           family={Industries},
+           familyi={I\bibinitperiod},
+           given={Suraj\bibnamedelima Brass},
+           giveni={S\bibinitperiod\bibinitdelim B\bibinitperiod}}}%
+      }
+      \strng{namehash}{ae1dbec97168cf2208662d429904cd4d}
+      \strng{fullhash}{ae1dbec97168cf2208662d429904cd4d}
+      \strng{fullhashraw}{ae1dbec97168cf2208662d429904cd4d}
+      \strng{bibnamehash}{ae1dbec97168cf2208662d429904cd4d}
+      \strng{authorbibnamehash}{ae1dbec97168cf2208662d429904cd4d}
+      \strng{authornamehash}{ae1dbec97168cf2208662d429904cd4d}
+      \strng{authorfullhash}{ae1dbec97168cf2208662d429904cd4d}
+      \strng{authorfullhashraw}{ae1dbec97168cf2208662d429904cd4d}
+      \field{sortinit}{8}
+      \field{sortinithash}{a231b008ebf0ecbe0b4d96dcc159445f}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{title}{Thermal conductivity of Brass}
+      \field{urlday}{31}
+      \field{urlmonth}{10}
+      \field{urlyear}{2026}
+      \field{year}{2026}
+      \field{urldateera}{ce}
+      \verb{urlraw}
+      \verb https://www.surajbrassindustries.com/latest-news/thermal-conductivity-of-brass/
+      \endverb
+      \verb{url}
+      \verb https://www.surajbrassindustries.com/latest-news/thermal-conductivity-of-brass/
+      \endverb
+    \endentry
   \enddatalist
 \endrefsection
 \endinput

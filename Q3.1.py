@@ -185,10 +185,36 @@ def dynamics(t_now, z, ux, uy, un):
     ))
     return dz
 
-def controller(mode, z, path_time, horizontal_confirmed, vertical_confirmed, return_x_reached):
+def angular_sensors(z):
+    # Emulated motor sensors. Position is not read by the controller.
+    return (z[1]+z[4])/r_m, (z[1]-z[4])/r_m
+
+
+def square_input(path_time, leg):
+    if leg >= 4:
+        return 0.0, 0.0
+    duration = path_period/4
+    local = path_time-leg*duration
+    if local >= duration-1e-10:
+        return 0.0, 0.0  # Hold until the encoder corner guard is confirmed.
+    xi = np.clip(local/duration, 0.0, 1.0)
+    direction = np.array([(1,0), (0,1), (-1,0), (0,-1)])[leg]
+    velocity = direction*square_side/duration*(30*xi**2-60*xi**3+30*xi**4)
+    acceleration = direction*square_side/duration**2*(60*xi-180*xi**2+120*xi**3)
+    jerk = direction*square_side/duration**3*(60-360*xi+360*xi**2)
+    damping = np.array([d_s+d_c,d_s-d_c])
+    current = 2/(r_m*K_m)*(J_eff*acceleration+damping*velocity)
+    dot_current = 2/(r_m*K_m)*(J_eff*jerk+damping*acceleration)
+    return L_m*dot_current+R_m*current+2*K_m/r_m*velocity
+
+
+def controller(mode, z, path_time, horizontal_confirmed, vertical_confirmed, return_x_reached, square_leg=0):
     if mode == Mode.PRINTING:
-        ux = float(ux_feedforward(path_time))
-        uy = float(uy_feedforward(path_time))
+        if print_shape == "square":
+            ux, uy = square_input(path_time, square_leg)
+        else:
+            ux = float(ux_feedforward(path_time))
+            uy = float(uy_feedforward(path_time))
     elif mode in (Mode.MOVING_TO_WIPE, Mode.PARKING):
         if horizontal_confirmed:
             ux = 0.0
@@ -233,6 +259,9 @@ def main():
     replacement_triggered = False
     return_x_reached = False
     new_print_triggered = False
+    encoder_position = np.zeros(2)
+    square_leg = 0
+    encoder_history = [encoder_position.copy()]
     completed_jobs = 0
     job_id = -1  # First accepted print command creates job 0.
     job_history = []
@@ -270,14 +299,9 @@ def main():
             replacement_triggered = True
 
         if mode in (Mode.MOVING_TO_WIPE, Mode.PARKING):
-            if(z[0] <= 0):
-                z[0] = 0.0
-                z[1] = 0.0
-            if (z[3] <= 0):
-                z[3] = 0.0
-                z[4] = 0.0
-            
-            if np.hypot(z[0], z[3]) < position_tolerance and np.hypot(z[1], z[4]) < velocity_tolerance:
+            # Q2 detector: confirmations come from commanded direction and
+            # angular-speed measurements, not direct position observations.
+            if horizontal_confirmed and vertical_confirmed:
                 if mode == Mode.PARKING:
                     mode = Mode.WAITING
                     event_log.append((t_now, "Parked: waiting for a new print command"))
@@ -285,12 +309,6 @@ def main():
                     mode = Mode.WIPING
                     event_log.append((t_now, "Parked: wiping started"))
                 mode_time = 0.0
-            
-            if(z[0] <= position_tolerance and abs(z[1]) < velocity_tolerance):
-                horizontal_confirmed = True
-            
-            if(z[3] <= position_tolerance and abs(z[4]) < velocity_tolerance):
-                vertical_confirmed = True
 
         if mode == Mode.WIPING:
             un = u_n_eq  # Keep the nozzle hot while wiping.
@@ -318,7 +336,8 @@ def main():
                 mode_time = 0.0
                 return_x_reached = False
 
-        if mode == Mode.PRINTING and path_time >= path_period:
+        if mode == Mode.PRINTING and ((print_shape == "square" and square_leg == 4)
+                                      or (print_shape != "square" and path_time >= path_period)):
             completed_jobs += 1
             event_log.append((t_now, "Print complete: parking at wipe tower"))
             mode = Mode.PARKING
@@ -336,6 +355,7 @@ def main():
                 new_print_triggered = True
                 job_id += 1
                 path_time = 0.0
+                square_leg = 0
                 saved_motion_state = z0[:6].copy()
                 saved_position = z0[[0, 3]].copy()
                 return_x_reached = False
@@ -350,7 +370,7 @@ def main():
 
         # 2. Bereken inputs voor deze mode.
         ux, uy = controller(
-            mode, z, path_time, horizontal_confirmed, vertical_confirmed, return_x_reached
+            mode, z, path_time, horizontal_confirmed, vertical_confirmed, return_x_reached, square_leg
         )
 
         dot_z = dynamics(t_now, z, ux, uy, un)
@@ -361,10 +381,13 @@ def main():
             local_path_time = path_time + (t_eval - t_now)
 
             ux, uy = controller(
-                mode, z_eval, local_path_time, horizontal_confirmed, vertical_confirmed, return_x_reached
+                mode, z_eval, local_path_time, horizontal_confirmed, vertical_confirmed, return_x_reached, square_leg
             )
 
-            return dynamics(t_eval, z_eval, ux, uy, un)
+            physical = dynamics(t_eval, z_eval[:9], ux, uy, un)
+            omega_l, omega_r = angular_sensors(z_eval)
+            measured_velocity = r_m/2*np.array([omega_l+omega_r, omega_l-omega_r])
+            return np.r_[physical, measured_velocity]
 
         integrated_mode = mode
 
@@ -375,13 +398,16 @@ def main():
         solution = solve_ivp(
             rhs,
             (t_now, time_steps[n + 1]),
-            z,
+            np.r_[z, encoder_position],
             method="Radau",
             rtol=1e-7,
             atol=1e-9
         )
 
-        z = solution.y[:, -1]
+        if not solution.success:
+            raise RuntimeError(solution.message)
+        z = solution.y[:9, -1].copy()
+        encoder_position = solution.y[9:11, -1].copy()
 
         if integrated_mode in (Mode.MOVING_TO_WIPE, Mode.PARKING):
             if z[0] <= 0.0:
@@ -392,22 +418,38 @@ def main():
                 z[3] = 0.0
                 z[4] = 0.0
 
+        if integrated_mode in (Mode.MOVING_TO_WIPE, Mode.PARKING):
+            omega_l, omega_r = angular_sensors(z)
+            measured_vx = r_m/2*(omega_l+omega_r)
+            measured_vy = r_m/2*(omega_l-omega_r)
+            # Ignore the initial rest sample; command must have been applied.
+            if mode_time >= 1.0:
+                if ux < 0 and abs(measured_vx) < velocity_tolerance:
+                    horizontal_confirmed = True
+                    encoder_position[0] = 0.0  # Known boundary reference.
+                if uy < 0 and abs(measured_vy) < velocity_tolerance:
+                    vertical_confirmed = True
+                    encoder_position[1] = 0.0
+
         if mode == Mode.RETURNING:
             target_x, target_y = saved_position
 
             if not return_x_reached:
-                if z[0] >= target_x:
+                if encoder_position[0] >= target_x:
                     z[0] = target_x
+                    encoder_position[0] = target_x
                     z[1] = 0.0
                     return_x_reached = True
 
             else:
                 # Houd x voorlopig met een ideale stop op zijn doel.
                 z[0] = target_x
+                encoder_position[0] = target_x
                 z[1] = 0.0
 
-                if z[3] >= target_y:
+                if encoder_position[1] >= target_y:
                     z[:6] = saved_motion_state.copy()
+                    encoder_position = saved_position.copy()
 
                     event_log.append((
                         time_steps[n + 1],
@@ -419,15 +461,38 @@ def main():
 
         # 4. Werk de timers bij.
         if integrated_mode == Mode.PRINTING:
-            path_time += dt
+            if print_shape == "square" and square_leg < 4:
+                boundary_time = (square_leg+1)*path_period/4
+                path_time = min(path_time+dt, boundary_time)
+                if path_time >= boundary_time-1e-9:
+                    targets = np.array([
+                        [x_max,y_min], [x_max,y_max], [x_min,y_max], [x_min,y_min]
+                    ])
+                    omega_l, omega_r = angular_sensors(z)
+                    measured_speed = r_m/2*np.hypot(omega_l+omega_r, omega_l-omega_r)
+                    if (np.linalg.norm(encoder_position-targets[square_leg]) < position_tolerance
+                            and measured_speed < velocity_tolerance):
+                        square_leg += 1
+                        event_log.append((time_steps[n+1], f"Corner {square_leg}: sensor confirmation"))
+            else:
+                path_time += dt
 
         mode_time += dt
         
         # 5. Bewaar tijd, z, mode en inputs.
         z_history.append(z.copy())
         mode_history.append(mode)
+        encoder_history.append(encoder_position.copy())
 
     z_history = np.asarray(z_history)
+    encoder_history = np.asarray(encoder_history)
+    output = Path(__file__).resolve().parent / "output"
+    output.mkdir(exist_ok=True)
+    np.savez(output / "Q3_1_results.npz", time=time_steps, states=z_history,
+             encoder_position=encoder_history,
+             mode=np.array([m.name for m in mode_history]),
+             event_time=np.array([e[0] for e in event_log]),
+             event_name=np.array([e[1] for e in event_log]))
 
     filament = simulate_print_jobs(time_steps, z_history, segment_modes, job_history)
 

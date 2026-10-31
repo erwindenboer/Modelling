@@ -1,0 +1,305 @@
+===== PDF PAGE 1 =====
+Mini project2026- Modelling a3D printer
+M. Becker, R. Ferrari, M. Mazo
+October6,2026
+The mini project is there to tie the lessons learned from the course
+together and simulate a complex system in a holistic way. This year,
+you’ll build a simulation of a3D printer. This is a group project, make
+sure you collaborate and spread the workload.
+Deliverables
+We expect you to provide the following results:
+1. A report ofno more than20pagespresenting your results. We ex-
+pect clean plots, complete derivations and thorough explanations
+of all your choices. Please mark clearly the answers to each of the
+questions with their corresponding question number.
+2. The code used to achieve your results. You are free to choose a
+programming language of your liking. We suggest Python, Julia or
+Matlab.
+3. A code repository, tracking your progress. We expect you to createEven though it’s not part of this course,
+try to practice good “git hygiene” by
+committing, branching, merging. There
+are many tutorials introducing you to
+GitHub, GitLab, etc. Also consider that
+you can use this project as a showcase
+for applications after your studies.
+the repositoryat the startof your project and to continuously
+maintain it during the project. Please keep the repositoryprivate
+during the mini project. When you make your final submission
+on Brightspace please indicate how we can access your repository.
+You can either publish your repository and provide the link in the
+report, or add one of the supervisors to your repository. If you
+choose the latter option, please reach out for our account details
+on the platform you are working on.
+For inspiration on how to structure the report, which information
+to provide and how, have a look at solutions of previous years mini-
+projects on Brightspace. If you have questions, reach out during the
+Q&As, on the Brightspace discussion board, or via MS Teams.
+
+===== PDF PAGE 2 =====
+mini project 2026-modelling a 3d printer 2
+AI usage
+Make sure to read and implement the TU Delft AI guidelines avail-
+able here. When writing the acknowledgment about the (eventual)
+use of AI, please use the standard version of it.
+Furthermore, the use of Generative AI tools (e.g., Copilot) is re-
+stricted/prohibited in this course for the following activities and/or
+assessments:
+• Generating design calculations or schematic drawings without
+performing the underlying calculations or design work yourself.
+• Creating presentation slides, posters, reflection pieces, professional
+development statements, or reports intended to demonstrate your
+own experiences.
+• Generating specific sections of assignments, essays, reports, or
+other coursework.
+• Producing data analysis outputs.
+• Producing or creating entire sections of code for submission.
+In case there is suspicion of violation of this requirements, students
+will be summoned for a meeting with the instructors in order to
+explain how they did adhere to these rules and provide further proof
+that results of the assignments were generated according to the rules.
+
+===== PDF PAGE 3 =====
+mini project 2026-modelling a 3d printer 3
+Introduction
+3D Printers have the basic task of extruding filament at a givenx,y,z
+coordinate at timet. The mechanism that achieves that movement
+determines the machine’s costs, print quality, and robustness. Out of
+many different options, the Core XY mechanism is a popular choice
+for modern printers. Different than Cartesian designs, where one
+Figure1: Core XY printer mechanism
+excluding the Z axis. The belts are blue
+and orange, and the driving motors are
+coloured respectively. Linear bearings
+are marked in yellow and slide on rails
+(black). The tool head with massm
+is coloured grey. The circles, with the
+exception of the motors, mark bearings.
+Bearings with a black colour are fixed
+to the rail below. The electrical input
+to the motors is shown as red and blue
+wires.
+motor drives one axis, here each motor simultaneously changes the
+xandyposition of the tool head. This results in a more complex
+kinematic model, but allows a more sturdy casing and faster printing
+speeds. Your task is to model and simulate the system.
+Variables and parametersMost of the variables and param-
+eters in this problem are defined in the table below. Note that the
+introduction of more variables and parameters may be necessary. If
+needed, choose sensible values for parameters and variables yourself.
+
+===== PDF PAGE 4 =====
+mini project 2026-modelling a 3d printer 4
+Name SymbolValue
+Motor angle leftθ l
+Motor voltage leftu m,l
+Motor current lefti m,l
+Motor radiusr m 11 mm
+Motor inductionL m 10 mH
+Motor resistorR m 90Ω
+Motor inertiaJ m 8·10 −6
+Motor constantK m 0.07 Nm/A
+Tool head positionx,y
+Tool head massm60g
+Nozzle voltageu n
+Nozzle currenti n
+Nozzle capacitorC n
+Nozzle thermal capacityC t,n
+Nozzle thermal resistanceR t,n 9K/W
+Nozzle resistorR n 8Ω
+Nozzle temperatureT n 240 C
+Environmental temperatureT e 300K
+Bearing friction rollingµ r 0.003 Ns/m
+Bearing friction linear x-directionµ l,x 0.002 Ns/m
+Bearing friction linear y-directionµ l,y 0.001 Ns/m
+Print bed temperatureT b 105 C
+Print area dimension xd x 29 cm
+Print area dimension yd y 29 cm
+Table1: Variables used in the mini
+project. The right motor variables are
+analogous to the left motor variables.
+You may need to define additional
+variables. If needed, choose sensible
+values for parameters and variables
+yourself.
+
+===== PDF PAGE 5 =====
+mini project 2026-modelling a 3d printer 5
+1Physical Modelling
+Q1.1Kinematics (1pt.)
+Model the kinematics of the system. At the end you should have an
+expression of thex,ycoordinates and velocities of the print head
+based on the motor anglesθ l andθ r. We expect formulations for the
+variables:
+x(θl,θ r),y(θ l,θ r)(1)
+˙x( ˙θl, ˙θr), ˙y( ˙θl, ˙θr). (2)
+Q1.2Dynamics (2pts.)
+Model the dynamics of the system. At the end of this part you
+should have a state-space description of the system with the voltages
+of the motors as inputs of the form
+˙x=f(x,u)(3)
+withx= [θ l,θ r,· · ·] ⊤ andu= [u l,u r]⊤.
+An important caveat! Your colleague ordered the wrong mo-
+tors, so instead of the typical stepper motors, you only have voltage-
+controlled DC motors at your disposal. As a result, you have to con-
+sider the following circuit to model the motor:
+Figure2: The DC motor is modelled as
+an LR circuit, coupled to an electrical-
+to-rotational mechanical transducer.
+The used variables areL m : inductor,
+Rm : resistance,i m : current,u m : input
+voltage,J m : motor inertia, andθ:
+motor angle. We neglect friction and
+the shaft is considered rigid.
+Q1.3Decouple the x and y dynamics (1pt.)
+Investigate how you can transform the state-space model to decouple
+thexandymotions. You should arrive at two decoupled state-space
+descriptions:
+˙xx =f x(xx,u x), (4)
+˙xy =f y(xy,u y),
+withx x = [x,· · ·] ⊤,x y = [y,· · ·] ⊤, andu x,u y being functions ofu l
+andu r.
+Hint:Review your solution from Q1.1.
+
+===== PDF PAGE 6 =====
+mini project 2026-modelling a 3d printer 6
+Q1.4Drawing shapes (1pt.)
+Design input signals such that the tool head follows an elliptic path.
+Draw another closed shape of you choosing (i.e. a circle, a symbol
+from poker cards, ... use your imagination and be original!).TheLissajou curvescan be one source
+of inspiration. Are shapes with sharp
+corners more difficult to draw than
+ones with rounded corners?
+Add a2D Fourier series of a quare with8frequencies.
+Show the working of your model through plots!
+Q1.5Model the Nozzle (1pt.)
+The nozzle is heated by a resistor and is subject to heat exchange
+with the environment and the filament. Input to the circuit is a con-
+trollable voltage. Model the governing differential equation(s). At the
+Figure3: Nozzle circuit with the in-
+ductorL n, the resistorR n, the capacitor
+Cn, as well as the thermal capacity and
+resistance of the nozzleC t,n andR t,n.
+end, you should have a state-space discription of the form
+˙xn =f n(xn,u n)(5)
+withx= [T n,· · ·] ⊤. You may combine the thermal loss to the envi-
+ronment and the filament into one loss with respect to the environ-
+mental temperatureT e, which you can choose.
+Q1.6Printing a circle of filament (PDE) (2pts.)
+When printing a3D object layer-by-layer, care must be taken to man-
+age the temperature of the solidifying filament already deposited,
+ensuring it is optimal before printing the next layer on top.
+In the following figure, you see the printing of the first layer of a
+cylinder having an elliptical cross-section. The filament is deposited
+onto a heated base plate to ensure it does not cool too quickly.
+Figure4: Printing one layer of an object
+whose cross-section is a closed shape, in
+this case an ellipse.
+
+===== PDF PAGE 7 =====
+mini project 2026-modelling a 3d printer 7
+Develop a1D distributed-parameter model of the filament cooling
+down, and solve it numerically to show how long it takes for it to
+cool. This information is useful for planning the print of the next
+layer.
+When modelling, you can assume for simplicity a square cross sec-
+tion of the printed filament. The lower side of it is in contact with the
+heated plate, while the other sides are exposed to the air at ambient
+temperature. The simulation should start as soon as the filament is
+being printed, which means your computational domain is growing
+over time. When the entire path has been printed, no more filament
+is deposited, but the simulation should continue until the tempera-
+ture of the printed filament is nearly uniform.To model the geometry, you can take
+inspiration from the closed circuit
+cooling pipe of the previous year’s
+mini project. But be careful: in the
+present case, the computational domain
+changes over time!
+
+===== PDF PAGE 8 =====
+mini project 2026-modelling a 3d printer 8
+2Finite State Machine
+Q2.1Finite State Machines - Filament replacement (2pts.)
+Next, you will model some basic high-level control operations of your
+3D printer. Namely, you will model the replacement of filament in
+these two situations:
+• When a new colour is required to be printed(C), or
+• When the currently being used spool is finished(F).
+We start modelling these two distinct situations as being triggered
+by two, independent, discrete signalsCandF. Once either of these
+events is detected, the following set of steps needs to be taken:
+1. Printing stops, saving the current location of the print head.
+2. Moving to a wipe-tower location(x p,y p), which we assume to be
+at(0, 0).
+3. Excess filament is wiped (by printing on the wiping location).
+4. The nozzle heat is switched off.
+5. New filament is loaded.
+6. The nozzle heat is switched on.
+7. Printing is resumed.
+Model the operation first as a Finite State Machine (FSM) of the3D
+printer, including a state for “printing" and any necessary states to
+cover the filament replacement process.Start by modelling the process with
+an arbitrary wipe location first.
+Q2.2Automata - Parked detection (3pts.)
+Your colleague forgot to order end-of-line sensors, but thankfully, the
+motors include rotational sensors you can use as a virtual end-of-line
+sensor. Simply put, you can detect an end-of-line by testing whether
+or not the motors are rotating to produce a vertical or horizontal
+motion when the corresponding voltages are applied to them. Let
+us assume the printer head is always brought to the origin via the
+concatenation of two types of motions:
+• Vertical (V) until we hit the bottom of the printing area,
+• Horizontal (H) until we hit the left-most side of the printing area.
+
+===== PDF PAGE 9 =====
+mini project 2026-modelling a 3d printer 9
+Furthermore, consider that your design includes a system that peri-
+odically checks the value of the voltages applied (to determine the
+type of motion commanded), and the angular velocity sensors of the
+motors.
+Consider signal sequencesσ:N→M×mwhereM={H,V},
+andm={+, 0}. A pair(M i,m i)denotes “type of motion" (horizon-
+tal, vertical), and “angular velocity" (positive or zero). As an example,
+one such sequence could beσ= (H,+)(V,+)(H,+)(H, 0)(V,+)(V, 0).
+Construct an automaton that could be used as ahead-parked detector
+by accepting the sequencesσthat lead to the printer head being cor-
+rectly parked. Note that the same automaton with minor adjustments
+can be used to detect any of the other three corners of the printing
+area.Demonstrate the latter statement.
+
+===== PDF PAGE 10 =====
+mini project 2026-modelling a 3d printer 10
+3Hybrid system
+Finally, you need to put together a complete simulation model of
+your3D printer. To that end, you need to connect your physical
+model from Q1with the models from Q2employing some event
+signals. You may consider in your model the following events, and
+any additional ones you may deem necessary:
+1. New colour is required.
+2. Filament finished.
+3. Excess filament removed.
+4. Nozzle temperature is high.
+5. Nozzle temperature is low.
+6. Motion commandsVandH.
+7. Angular motion.
+Q3.1- Filament replacement (2pts.)
+Follow the implementation guidelines
+and tips from the lecture!Build a hybrid system accounting for the physics of Q1and the FSM
+designed on Q2. Simulate the resulting system and provide illustra-
+tive plots.E.g., switching from red to green filament.
+Make sure that your description clearly contains:
+• Proper definitions of the discrete events relating to the state vari-
+ables of your physical model.
+• All the necessary invariants, guards and reset maps.
+Hints:
+•Collect all state-space descriptions into one model of the form˙x=f(x,u)
+and implement it as one functiondx=sys(x,u)which you can pass on to
+a solver, along with the event triggers.
+•Of the events defined above, the first three may be considered as purely
+discrete events triggered by some sensor. An alert designer may notice
+that signals2and3could potentially be detected as a function of the
+distance printed, or the effective printing time.
+Q3.2- Draw a square (1pt.)
+Extend the hybrid system to draw a (perfect) square figure using
+only the angular motion sensors on the DC motors. Simulate this
+system and provide illustrative plots.As a bonus, show that you can rotate
+the square.
