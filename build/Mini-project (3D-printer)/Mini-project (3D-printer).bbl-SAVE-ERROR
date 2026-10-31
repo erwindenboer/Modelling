@@ -164,10 +164,10 @@
       \field{year}{2026}
       \field{urldateera}{ce}
       \verb{urlraw}
-      \verb https://docs.scipy.org/doc/scipy/reference/generated/scipy.integrate.{R}adau.html\#r04c194a64501-1
+      \verb https://docs.scipy.org/doc/scipy/reference/generated/scipy.integrate.Radau.html
       \endverb
       \verb{url}
-      \verb https://docs.scipy.org/doc/scipy/reference/generated/scipy.integrate.%7BR%7Dadau.html%5C#r04c194a64501-1
+      \verb https://docs.scipy.org/doc/scipy/reference/generated/scipy.integrate.Radau.html
       \endverb
     \endentry
     \entry{brass}{online}{}{}

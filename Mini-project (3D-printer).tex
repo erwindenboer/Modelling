@@ -21,7 +21,7 @@
 The mini-project involves the modelling of a 3D-printer in three domains: physical, discrete, and hybrid.
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.45\linewidth]{3D-printer.png}
+    \includegraphics[width=0.4\linewidth]{3D-printer.png}
     \caption{The schematic view of the 3D-printer.}
     \label{fig:3D-printer}
 \end{figure}
@@ -831,7 +831,7 @@ To aid in the derivation, \Cref{fig:filament-discretization} is created to defin
     }
     \caption{Spatial discretization of the deposited filament.
     Blue boundaries exchange heat with the air, while the orange
-    boundary exchanges heat with the print bed.}
+    boundary exchanges heat with the print bed. The axial heat current is neglected before the printing trajectory is closed.}
     \label{fig:filament-discretization}
 \end{figure}
 
@@ -859,7 +859,8 @@ The Partial Differential Equation (PDE) for the heat transfer can be modelled as
 
 The initial value condition can be found by defining $t_d(s)$ which indicates the time when the filament at position $s$ is printed. At that time and position, the temperature of the filament is equal to the nozzle temperature $T(s,t_d(s))=T_n$.
 
-The printing temperature of the nozzle is $T_n=\SI{240}{\degreeCelsius}$. A suitable choice for filament is ABS as this temperature falls in the generic print temperature \cite{santos2023insights}. The material parameters of \cite{santos2023insights} are used in the PDE evaluation. The effective heat contact coefficient $\alpha_{\text{bed}}$ is selected as \SI{50}{\watt\per\meter\squared\per\kelvin} which is found to be adequate to illustrate the progression of the PDE versus time.
+The printing temperature of the nozzle is $T_n=\SI{240}{\degreeCelsius}$. A suitable choice for filament is ABS as this temperature falls in the generic print temperature \cite{santos2023insights}. The material parameters of \cite{santos2023insights} are used in the PDE evaluation. The effective heat contact coefficient $\alpha_{\text{bed}}$ is selected as \SI{50}{\watt\per\meter\squared\per\kelvin} which is found to be adequate to illustrate the progression of the PDE versus time. The filament temperature is considered uniform when $\max_i T_i - \min_i T_i \le \SI{1}{\kelvin}$.
+
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.9\linewidth]{table_ABS_parameters.png}
@@ -1168,7 +1169,7 @@ where
 \end{aligned}
 \end{equation}
 
-Element $H$ denotes the horizontal movement of the printer head whereas $V$ denotes the vertical movement. A $+$ indicates that the printer heads velocity is non-zero and is therefore moving. When a $0$ is reported, the printer head has stopped moving and has reached the boundary of the printer bed. When both $H$ and $V$ are equal to 0, the printer head has reached the parking position and the automaton can be reset to the initial state. 
+Element $H$ denotes the horizontal movement of the printer head whereas $V$ denotes the vertical movement. A $+$ indicates that the printer heads velocity is non-zero and is therefore moving. When a $0$ is reported, the printer head has stopped moving and has reached the boundary of the printer bed. The parked state is reached after both $(H,0) \land (V,0)$ have been confirmed during the return to home procedure.
 
 \section{Hybrid system}
 
@@ -1350,7 +1351,19 @@ The calculated \SI{58.11}{\degreeCelsius} is connected to the filament while in 
 
 \subsection{Draw a square}
 
-The animation \Cref{fig:hybrid-animation} demonstrates the total functioning of the 3D-printer. The simulation starts with the nozzle temperature begin equal to the room temperature and the printers head positioned in the parking state. At first the nozzle heats up. Printing of the square starts when the nozzle is heated up. The temperature of the filament is shown, and it can be observed that the newly printed filament is heated to the nozzle temperature. The filament cools down to the equilibrium temperature. After $\tau_p=\frac{500}{3}\approx \SI{166.7}{\second}$ of effective printing time, a new color is requested and the printer head will return to the origin and stay there for \SI{50}{\second} to simulate the wiping action. After the wiping action, the nozzle cools down to \SI{333}{\kelvin} simulating that new filament is loaded. When the filament is loaded, the nozzle heats up again to the reference temperature and the printer head moves to the saved position. When this position is reached, the printer continues to complete the print trajectory. After finishing, the printer head moves to the parked position and the nozzle turned off.
+The animation \Cref{fig:hybrid-animation} demonstrates the total functioning of the 3D-printer. The simulation starts with the nozzle temperature initially equal to the room temperature and the printers head positioned in the parking state. At first the nozzle heats up. Printing of the square starts when the nozzle is heated up. The temperature of the filament is shown, and it can be observed that the newly printed filament is heated to the nozzle temperature. The filament cools down to the equilibrium temperature. After $\tau_p=\frac{500}{3}\approx \SI{166.7}{\second}$ of effective printing time, a new color is requested and the printer head will return to the origin and stay there for \SI{50}{\second} to simulate the wiping action. After the wiping action, the nozzle cools down to \SI{333}{\kelvin} simulating that new filament is loaded. When the filament is loaded, the nozzle heats up again to the reference temperature and the printer head moves to the saved position. When this position is reached, the printer continues to complete the print trajectory. After finishing, the printer head moves to the parked position and the nozzle is turned off.
+
+\begin{figure}[H]
+    \centering
+    \animategraphics[
+        controls,
+        loop,
+        poster=last,
+        width=\linewidth
+    ]{6}{frames_Q3_1/frame-}{000}{119}
+    \caption{Simulation of the hybrid 3D-printer model. Open in Acrobat Reader in order to start the animation.}
+    \label{fig:hybrid-animation}
+\end{figure}
 
 The angle speed sensors can be used to determine the position of the printer head with the equations
 
@@ -1363,20 +1376,7 @@ The angle speed sensors can be used to determine the position of the printer hea
 \end{equation}
 
 By integration, the position of the printer head $\hat{x},\hat{y}$ can be obtained.
-A square has four straight sides by which the velocity of $\dot{\hat{x}}$ and $\dot{\hat{y}}$ will be zero sequentially. The movement of the printer head slows down when it reaches a corner of the square and is equal to zero at the corner. When the velocity of the printer head is equal to zero, the next side of the square will be drawn. The results neglect ideal sensors and no slipping being present.
-
-
-\begin{figure}[htbp]
-    \centering
-    \animategraphics[
-        controls,
-        loop,
-        poster=last,
-        width=\linewidth
-    ]{6}{frames_Q3_1/frame-}{000}{119}
-    \caption{Simulation of the hybrid 3D-printer model. Open in Acrobat Reader in order to start the animation.}
-    \label{fig:hybrid-animation}
-\end{figure}
+A square has four straight sides by which the velocity of $\dot{\hat{x}}$ and $\dot{\hat{y}}$ will be zero sequentially. The movement of the printer head slows down when it reaches a corner of the square and is equal to zero at the corner. When the velocity of the printer head is equal to zero, the next side of the square will be drawn. The position estimates are obtained by integrating the measured motor angular velocities from a known initial position. The next side is started only after the estimated corner position has been reached, and the measured speed is approximately zero. Ideal sensors and no belt slip are assumed.
 
 \par\noindent\rule{\textwidth}{0.4pt}
 \printbibliography
